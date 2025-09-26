@@ -154,8 +154,13 @@ def track_email_sent(recipient, subject, campaign_type="Manual"):
     """Track sent emails with reply tracking"""
     global sent_emails, email_analytics, unanswered_emails
     
+    # Generate unique tracking ID
+    import uuid
+    tracking_id = str(uuid.uuid4())[:8]
+    
     email_record = {
         'id': len(sent_emails) + 1,
+        'tracking_id': tracking_id,
         'recipient': recipient,
         'subject': subject,
         'campaign_type': campaign_type,
@@ -170,6 +175,7 @@ def track_email_sent(recipient, subject, campaign_type="Manual"):
     # Add to unanswered emails initially
     unanswered_emails.append({
         'email_id': email_record['id'],
+        'tracking_id': tracking_id,
         'recipient': recipient,
         'subject': subject,
         'sent_date': email_record['sent_date'],
@@ -177,6 +183,7 @@ def track_email_sent(recipient, subject, campaign_type="Manual"):
     })
     
     email_analytics['total_sent'] += 1
+    return tracking_id
 
 # Email Monitoring Functions
 def check_for_new_emails():
@@ -232,15 +239,29 @@ def check_for_new_emails():
                     # Check if this is a reply to one of our sent emails
                     is_reply = False
                     original_email = None
+                    tracking_id = None
                     
-                    # Look for "Re:" in subject or check if we sent to this email
-                    if 'Re:' in subject or 'RE:' in subject:
+                    # First, check for tracking ID in the message content
+                    if 'TRACKING-ID:' in message_content:
+                        import re
+                        tracking_match = re.search(r'\[TRACKING-ID:\s*([a-f0-9-]+)\]', message_content)
+                        if tracking_match:
+                            tracking_id = tracking_match.group(1)
+                            # Find original email by tracking ID
+                            for sent_email in sent_emails:
+                                if sent_email.get('tracking_id') == tracking_id:
+                                    original_email = sent_email
+                                    is_reply = True
+                                    break
+                    
+                    # If no tracking ID found, check by subject and recipient
+                    if not is_reply and ('Re:' in subject or 'RE:' in subject):
                         # Find original sent email
                         for sent_email in sent_emails:
                             if sent_email['recipient'].lower() == sender_email.lower():
                                 original_email = sent_email
                                 is_reply = True
-                break
+                                break
         
                     if is_reply and original_email:
                         # Extract message content
@@ -268,8 +289,7 @@ def check_for_new_emails():
                         # Check if we already processed this reply
                         already_processed = any(
                             r.get('from_email', '').lower() == sender_email.lower() and 
-                            r.get('subject', '') == subject and
-                            r.get('content', '') == message_content
+                            r.get('original_email_id') == original_email['id']
                             for r in replies
                         )
                         
@@ -665,12 +685,18 @@ def send_next_email():
         msg['To'] = next_contact['email']
         msg['Subject'] = subject
         
+        # Get tracking ID for this email
+        tracking_id = track_email_sent(next_contact['email'], subject, "Campaign")
+        
         email_content = f"""Dear {next_contact['first_name']},
 
 {message}
 
 Best regards,
-Your Team"""
+Your Team
+
+---
+[TRACKING-ID: {tracking_id}]"""
         
         msg.set_content(email_content)
         
