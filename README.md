@@ -12,17 +12,25 @@ A professional email marketing platform with AI-powered automation, optimized fo
 
 ## 🚀 **Quick Start**
 
-### 1. **Install Dependencies**
+### **Option 1: Automatic Installation**
 ```bash
-pip install -r requirements.txt
+# Run the installation script
+./install.sh
+
+# Start the application
+python3 app.py
 ```
 
-### 2. **Run the Application**
+### **Option 2: Manual Installation**
 ```bash
-python app.py
+# Install dependencies
+pip3 install -r requirements.txt
+
+# Run the application
+python3 app.py
 ```
 
-### 3. **Open Your Browser**
+### **Open Your Browser**
 ```
 http://localhost:5008
 ```
