@@ -871,8 +871,11 @@ Your Team</textarea>
 
         async function loadContacts() {
             try {
+                console.log('🔧 LOADING CONTACTS...');
                 const response = await fetch('/get-contacts');
                 contacts = await response.json();
+                console.log('🔧 LOADED CONTACTS:', contacts);
+                console.log('🔧 CONTACTS LENGTH:', contacts.length);
                 updateContactsDisplay();
                 updateStats();
             } catch (error) {
@@ -1009,12 +1012,16 @@ Your Team</textarea>
                 const result = await response.json();
                 
                 if (result.success) {
+                    console.log('✅ CONTACT ADDED SUCCESSFULLY');
                     showAlert('✅ Contact added successfully!', 'success');
                     document.getElementById('addContactForm').reset();
                     // Force reload contacts and campaign status
+                    console.log('🔧 RELOADING CONTACTS AFTER ADD...');
                     await loadContacts();
                     await loadCampaignStatus();
+                    console.log('🔧 RELOAD COMPLETE');
                 } else {
+                    console.log('❌ CONTACT ADD FAILED:', result.message);
                     showAlert(`❌ ${result.message}`, 'danger');
                 }
             } catch (error) {
@@ -1048,7 +1055,12 @@ Your Team</textarea>
         }
 
         async function startCampaign() {
+            console.log('🔧 START CAMPAIGN DEBUG:');
+            console.log('🔧 CONTACTS ARRAY:', contacts);
+            console.log('🔧 CONTACTS LENGTH:', contacts.length);
+            
             if (contacts.length === 0) {
+                console.log('❌ NO CONTACTS FOUND - SHOWING ERROR');
                 showAlert('❌ No contacts added yet! Please add contacts first before starting a campaign.', 'danger');
                 return;
             }
