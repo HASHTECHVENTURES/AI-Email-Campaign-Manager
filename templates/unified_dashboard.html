@@ -529,16 +529,30 @@ Your Team</textarea>
         }
 
         function updateStats() {
-            document.getElementById('total-contacts').textContent = contacts.length;
-            document.getElementById('sent-emails').textContent = campaignStatus.sent_emails || 0;
+            const totalContactsElement = document.getElementById('total-contacts');
+            const sentEmailsElement = document.getElementById('sent-emails');
+            const successRateElement = document.getElementById('success-rate');
+            const campaignStatusElement = document.getElementById('campaign-status');
             
-            const successRate = campaignStatus.total_emails > 0 ? 
-                Math.round((campaignStatus.sent_emails / campaignStatus.total_emails) * 100) : 0;
-            document.getElementById('success-rate').textContent = successRate + '%';
+            if (totalContactsElement) {
+                totalContactsElement.textContent = contacts.length;
+            }
             
-            const status = campaignStatus.running ? 'Running' : 
-                          campaignStatus.total_emails > 0 ? 'Completed' : 'Ready';
-            document.getElementById('campaign-status').textContent = status;
+            if (sentEmailsElement) {
+                sentEmailsElement.textContent = campaignStatus.sent_emails || 0;
+            }
+            
+            if (successRateElement) {
+                const successRate = campaignStatus.total_emails > 0 ? 
+                    Math.round((campaignStatus.sent_emails / campaignStatus.total_emails) * 100) : 0;
+                successRateElement.textContent = successRate + '%';
+            }
+            
+            if (campaignStatusElement) {
+                const status = campaignStatus.running ? 'Running' : 
+                              campaignStatus.total_emails > 0 ? 'Completed' : 'Ready';
+                campaignStatusElement.textContent = status;
+            }
         }
 
         async function uploadBulkContacts() {
