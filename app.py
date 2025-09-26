@@ -1017,9 +1017,9 @@ def validate_single_email():
         return jsonify({'success': False, 'message': 'Email address required'})
     
     validation = validate_email_deliverability(email)
-        
-        return jsonify({
-            'success': True, 
+    
+    return jsonify({
+        'success': True, 
         'valid': validation['valid'],
         'reason': validation['reason'],
         'email': email
