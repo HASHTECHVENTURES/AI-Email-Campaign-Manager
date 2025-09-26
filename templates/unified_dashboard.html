@@ -829,23 +829,17 @@ Your Team</textarea>
         function startLiveMonitoring() {
             if (isLiveMonitoring) return;
             
-            console.log('🔥 STARTING LIVE EMAIL MONITORING...');
+            console.log('✅ LIVE MONITORING READY - Manual checks only');
             isLiveMonitoring = true;
             
-            // Check immediately
-            manualCheckAndReply();
-            
-            // TRULY LIVE - Check every 2 seconds continuously!
-            liveMonitoringInterval = setInterval(() => {
-                console.log('🔥 TRULY LIVE: Instant reply scanning...');
-                manualCheckAndReply();
-            }, 2000); // 2 seconds for TRULY LIVE monitoring
+            // NO AUTOMATIC INTERVALS - Only manual checks
+            // User can click "Refresh Now" or "AI Check & Reply" when needed
             
             // Update status indicator
             const liveStatus = document.getElementById('live-status');
             if (liveStatus) {
-                liveStatus.innerHTML = '<i class="fas fa-circle me-1 blink"></i>LIVE ACTIVE';
-                liveStatus.className = 'badge bg-success me-2';
+                liveStatus.innerHTML = '<i class="fas fa-circle me-1"></i>MANUAL MODE';
+                liveStatus.className = 'badge bg-info me-2';
             }
         }
         

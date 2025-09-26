@@ -215,7 +215,15 @@ sent_campaign_emails = {
 
 def send_email_with_tracking(recipient, first_name, last_name, subject, message, email_account='primary'):
     """Send email with actual SMTP functionality"""
+    print(f"🔧 EMAIL SEND DEBUG:")
+    print(f"   Recipient: {recipient}")
+    print(f"   First Name: {first_name}")
+    print(f"   Last Name: {last_name}")
+    print(f"   Subject: {subject}")
+    print(f"   Email Account: {email_account}")
+    
     if not recipient or not first_name:
+        print(f"❌ INCOMPLETE DATA: recipient={recipient}, first_name={first_name}")
         return False, "Incomplete recipient data"
     
     # Handle missing last name (common for AI replies)
@@ -240,7 +248,11 @@ Your Team
     
     account = EMAIL_ACCOUNTS[email_account]
     
-    # Using configured email account
+    print(f"🔧 ACCOUNT CONFIG:")
+    print(f"   Email: {account['email']}")
+    print(f"   Password: {'*' * len(account['password']) if account['password'] else 'NONE'}")
+    print(f"   Active: {account['active']}")
+    print(f"   SMTP: {account['smtp_server']}:{account['smtp_port']}")
     
     # Check if account is configured
     if not account['email'] or account['email'] == 'test@example.com':
