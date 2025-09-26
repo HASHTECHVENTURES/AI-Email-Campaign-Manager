@@ -1271,6 +1271,41 @@ def dashboard():
 def get_status():
     return jsonify(campaign_status)
 
+@app.route('/api/reset-all', methods=['POST'])
+def reset_all_data():
+    """Reset all data - clear contacts, campaign status, and sent emails"""
+    global campaign_status, sent_campaign_emails, email_monitoring
+    
+    # Reset campaign status
+    campaign_status = {
+        'running': False,
+        'total_emails': 0,
+        'sent_emails': 0,
+        'failed_emails': 0,
+        'current_progress': 0,
+        'current_recipient': '',
+        'start_time': None,
+        'end_time': None,
+        'results': [],
+        'contacts': []
+    }
+    
+    # Reset sent emails tracking
+    sent_campaign_emails = {
+        'sent': [],
+        'failed': [],
+        'bounced': []
+    }
+    
+    # Reset email monitoring
+    email_monitoring = {
+        'enabled': False,
+        'last_check': None,
+        'notifications': []
+    }
+    
+    return jsonify({'success': True, 'message': 'All data reset successfully'})
+
 @app.route('/download/<filename>')
 def download_file(filename):
     file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
