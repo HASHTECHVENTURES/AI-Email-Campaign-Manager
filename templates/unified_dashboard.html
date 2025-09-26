@@ -2023,12 +2023,20 @@ Your Team</textarea>
                 negativeBarElement.style.width = '20%';
             }
             
-            // Update activity feed
-            updateActivityFeed(data.activity_feed);
+            // Update activity feed with safe data
+            updateActivityFeed(data.activity_feed || []);
         }
 
         function updateActivityFeed(activities) {
             const feed = document.getElementById('activity-feed');
+            if (!feed) return;
+            
+            // Safety check for activities
+            if (!activities || !Array.isArray(activities)) {
+                feed.innerHTML = '<div class="text-muted">No recent activity</div>';
+                return;
+            }
+            
             let html = '';
             
             activities.forEach(activity => {
