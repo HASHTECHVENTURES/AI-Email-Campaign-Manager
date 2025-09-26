@@ -11,4 +11,7 @@ requests==2.31.0
 pandas==2.3.2
 openpyxl==3.1.5
 
+# Email Validation
+dnspython==2.4.2
+
 # Note: Install with: pip install -r requirements.txt

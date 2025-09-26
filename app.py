@@ -12,6 +12,9 @@ import requests
 import json
 import pandas as pd
 import io
+import re
+import dns.resolver
+import socket
 
 app = Flask(__name__)
 
@@ -29,6 +32,8 @@ GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini
 contacts = []
 sent_emails = []
 replies = []
+bounced_emails = []
+fake_emails = []
 
 # Analytics
 email_analytics = {
@@ -52,6 +57,34 @@ def calculate_analytics():
         email_analytics['response_rate'] = 0.0
     
     return email_analytics
+
+def validate_email_format(email):
+    """Validate email format using regex"""
+    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    return re.match(pattern, email) is not None
+
+def check_domain_exists(domain):
+    """Check if email domain exists using DNS"""
+    try:
+        dns.resolver.resolve(domain, 'MX')
+        return True
+    except:
+        try:
+            dns.resolver.resolve(domain, 'A')
+            return True
+        except:
+            return False
+
+def validate_email_deliverability(email):
+    """Comprehensive email validation"""
+    if not validate_email_format(email):
+        return {'valid': False, 'reason': 'Invalid email format'}
+    
+    domain = email.split('@')[1]
+    if not check_domain_exists(domain):
+        return {'valid': False, 'reason': 'Domain does not exist'}
+    
+    return {'valid': True, 'reason': 'Valid email'}
 
 def track_email_sent(recipient, subject, campaign_type="Manual"):
     """Track sent emails"""
@@ -147,8 +180,8 @@ def get_contacts_api():
 
 @app.route('/add-contact', methods=['POST'])
 def add_contact():
-    """Add a single contact"""
-    global contacts
+    """Add a single contact with email validation"""
+    global contacts, fake_emails
     
     email_addr = request.form.get('email')
     first_name = request.form.get('first_name')
@@ -156,6 +189,16 @@ def add_contact():
     
     if not email_addr or not first_name:
         return jsonify({'success': False, 'message': 'Email and first name required'})
+    
+    # Validate email
+    validation = validate_email_deliverability(email_addr)
+    if not validation['valid']:
+        fake_emails.append({
+            'email': email_addr,
+            'reason': validation['reason'],
+            'detected_date': datetime.now().isoformat()
+        })
+        return jsonify({'success': False, 'message': f'Invalid email: {validation["reason"]}'})
     
     # Check if already exists
     for contact in contacts:
@@ -166,7 +209,9 @@ def add_contact():
         'email': email_addr,
         'first_name': first_name,
         'last_name': last_name or '',
-        'status': 'Pending'
+        'status': 'Pending',
+        'validated': True,
+        'validation_date': datetime.now().isoformat()
     }
     
     contacts.append(new_contact)
@@ -354,8 +399,14 @@ def upload_bulk_contacts():
                 first_name = str(row['First Name']).strip()
                 last_name = str(row['Last Name']).strip()
                 
-                # Validate email
-                if not email or '@' not in email:
+                # Validate email format and deliverability
+                validation = validate_email_deliverability(email)
+                if not validation['valid']:
+                    fake_emails.append({
+                        'email': email,
+                        'reason': validation['reason'],
+                        'detected_date': datetime.now().isoformat()
+                    })
                     error_count += 1
                     continue
                 
@@ -370,7 +421,9 @@ def upload_bulk_contacts():
                     'email': email,
                     'first_name': first_name,
                     'last_name': last_name,
-                    'status': 'Pending'
+                    'status': 'Pending',
+                    'validated': True,
+                    'validation_date': datetime.now().isoformat()
                 }
                 
                 contacts.append(new_contact)
@@ -455,6 +508,76 @@ def send_ai_reply():
         
     except Exception as e:
         return jsonify({'success': False, 'message': f'Error sending reply: {str(e)}'})
+
+@app.route('/api/fake-emails')
+def get_fake_emails():
+    """Get list of detected fake emails"""
+    return jsonify(fake_emails)
+
+@app.route('/api/bounced-emails')
+def get_bounced_emails():
+    """Get list of bounced emails"""
+    return jsonify(bounced_emails)
+
+@app.route('/api/validate-email', methods=['POST'])
+def validate_single_email():
+    """Validate a single email address"""
+    data = request.get_json()
+    email = data.get('email')
+    
+    if not email:
+        return jsonify({'success': False, 'message': 'Email address required'})
+    
+    validation = validate_email_deliverability(email)
+    
+    if not validation['valid']:
+        fake_emails.append({
+            'email': email,
+            'reason': validation['reason'],
+            'detected_date': datetime.now().isoformat()
+        })
+    
+    return jsonify({
+        'success': True,
+        'valid': validation['valid'],
+        'reason': validation['reason'],
+        'email': email
+    })
+
+@app.route('/api/email-stats')
+def get_email_stats():
+    """Get email validation statistics"""
+    total_contacts = len(contacts)
+    fake_count = len(fake_emails)
+    bounce_count = len(bounced_emails)
+    valid_count = len([c for c in contacts if c.get('validated', False)])
+    
+    return jsonify({
+        'total_contacts': total_contacts,
+        'valid_emails': valid_count,
+        'fake_emails': fake_count,
+        'bounced_emails': bounce_count,
+        'validation_rate': round((valid_count / max(total_contacts, 1)) * 100, 2)
+    })
+
+@app.route('/api/clean-fake-emails', methods=['POST'])
+def clean_fake_emails():
+    """Remove fake emails from contacts list"""
+    global contacts, fake_emails
+    
+    fake_email_list = [fe['email'] for fe in fake_emails]
+    original_count = len(contacts)
+    
+    # Remove contacts with fake emails
+    contacts = [c for c in contacts if c['email'].lower() not in [fe.lower() for fe in fake_email_list]]
+    
+    removed_count = original_count - len(contacts)
+    
+    return jsonify({
+        'success': True,
+        'message': f'Removed {removed_count} fake emails from contacts',
+        'removed_count': removed_count
+    })
 
 if __name__ == '__main__':
     print("🚀 Starting AI Email Campaign Manager...")
