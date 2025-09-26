@@ -191,14 +191,6 @@
                                 <i class="fas fa-reply me-2"></i>Replies <span class="badge bg-danger" id="replies-count">0</span>
                             </button>
                         </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="analytics-tab" data-bs-toggle="tab" data-bs-target="#analytics" type="button" role="tab">
-                        <i class="fas fa-chart-line me-2"></i>Analytics
-                    </button>
-                    <button class="nav-link" id="settings-tab" data-bs-toggle="tab" data-bs-target="#settings" type="button" role="tab">
-                        <i class="fas fa-cog me-2"></i>Settings
-                    </button>
-                </li>
             </ul>
 
             <div class="tab-content" id="mainTabsContent">
@@ -217,22 +209,6 @@
                                 </div>
                                 
                                 <!-- Bulk Upload Section -->
-                                <div class="mb-4">
-                                    <h6 class="fw-bold mb-2">
-                                        <i class="fas fa-upload me-2"></i>Bulk Upload Contacts
-                                    </h6>
-                                    <div class="mb-2">
-                                        <input type="file" class="form-control" id="bulkContactFile" accept=".xlsx,.xls,.csv">
-                                        <small class="text-muted">Upload Excel (.xlsx, .xls) or CSV file with columns: Email, First Name, Last Name</small>
-                                    </div>
-                                    <button type="button" class="btn btn-success btn-sm" onclick="uploadBulkContacts()">
-                                        <i class="fas fa-cloud-upload-alt me-1"></i>Upload Contacts
-                                    </button>
-                                </div>
-                                
-                                <div class="text-center mb-3">
-                                    <span class="text-muted">--- OR ---</span>
-                                </div>
                                 <form id="addContactForm">
                         <div class="mb-3">
                                         <label class="form-label">Email Address *</label>
@@ -246,14 +222,6 @@
                                         <label class="form-label">Last Name *</label>
                                         <input type="text" class="form-control" id="lastName" required>
                                     </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">Gender</label>
-                                        <select class="form-select" id="gender">
-                                        <option value="M">Male</option>
-                                        <option value="F">Female</option>
-                                        <option value="O">Other</option>
-                                    </select>
-                                </div>
                                     <button type="submit" class="btn btn-primary w-100">
                                         <i class="fas fa-plus me-2"></i>Add Contact
                             </button>
@@ -412,165 +380,8 @@ Your Team</textarea>
             </div>
 
 
-                <!-- Analytics Tab -->
-                <div class="tab-pane fade" id="analytics" role="tabpanel">
-                    <!-- Analytics Header -->
-                    <div class="row mb-4">
-                        <div class="col-12">
-                    <div class="section-card">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <h4 class="fw-bold mb-1">
-                                            <i class="fas fa-chart-line me-2"></i>🔥 INSANE Analytics Dashboard
-                        </h4>
-                                        <p class="text-muted mb-0">Real-time insights and performance metrics that will blow your mind!</p>
-                                    </div>
-                                    <div>
-                                        <button class="btn btn-primary btn-sm me-2" onclick="refreshAnalytics()">
-                                            <i class="fas fa-sync me-1"></i>Refresh Data
-                                        </button>
-                                        <button class="btn btn-outline-primary btn-sm" onclick="exportAnalytics()">
-                                            <i class="fas fa-download me-1"></i>Export Report
-                                        </button>
-                                    </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
 
-                    <!-- Key Performance Indicators -->
-                    <div class="row mb-4">
-                        <div class="col-md-3">
-                            <div class="section-card text-center">
-                                <div class="display-6 fw-bold text-primary" id="total-campaigns">0</div>
-                                <h6 class="text-muted">Total Campaigns</h6>
-                                <small class="text-success">
-                                    <i class="fas fa-arrow-up me-1"></i>
-                                    <span id="campaigns-growth">+0%</span> this month
-                                </small>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="section-card text-center">
-                                <div class="display-6 fw-bold text-success" id="total-responses">0</div>
-                                <h6 class="text-muted">Total Responses</h6>
-                                <small class="text-success">
-                                    <i class="fas fa-arrow-up me-1"></i>
-                                    <span id="responses-growth">+0%</span> this week
-                                </small>
-                    </div>
-                </div>
-                        <div class="col-md-3">
-                            <div class="section-card text-center">
-                                <div class="display-6 fw-bold text-warning" id="ai-efficiency">0%</div>
-                                <h6 class="text-muted">AI Efficiency</h6>
-                                <small class="text-muted">
-                                    <i class="fas fa-robot me-1"></i>
-                                    <span id="ai-improvement">+0%</span> improvement
-                                </small>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="section-card text-center">
-                                <div class="display-6 fw-bold text-info" id="conversion-rate">0%</div>
-                                <h6 class="text-muted">Conversion Rate</h6>
-                                <small class="text-muted">
-                                    <i class="fas fa-chart-line me-1"></i>
-                                    <span id="conversion-trend">+0%</span> vs last month
-                                </small>
-            </div>
-        </div>
-    </div>
-
-                    <!-- AI Analytics Row -->
-                    <div class="row mb-4">
-                        <div class="col-md-6">
-                            <div class="section-card">
-                                <h5 class="fw-bold mb-3">
-                                    <i class="fas fa-robot me-2"></i>🤖 AI Performance Analytics
-                                </h5>
-                                <div class="row">
-                                    <div class="col-6">
-                                        <div class="bg-success bg-opacity-10 p-3 rounded mb-3">
-                                            <div class="d-flex justify-content-between">
-                                                <span>Successful AI Replies</span>
-                                                <strong class="text-success" id="ai-success-count">0</strong>
-                </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-6">
-                                        <div class="bg-danger bg-opacity-10 p-3 rounded mb-3">
-                                            <div class="d-flex justify-content-between">
-                                                <span>Failed AI Replies</span>
-                                                <strong class="text-danger" id="ai-failed-count">0</strong>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="alert alert-info">
-                                    <i class="fas fa-info-circle me-2"></i>
-                                    <strong>AI Analytics</strong> Data will appear here as you run campaigns and receive replies.
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="section-card">
-                                <h5 class="fw-bold mb-3">
-                                    <i class="fas fa-brain me-2"></i>🧠 Sentiment Analysis Insights
-                                </h5>
-                        <div class="mb-3">
-                                    <div class="d-flex justify-content-between mb-2">
-                                        <span>😊 Positive Responses</span>
-                                        <span class="fw-bold text-success" id="positive-sentiment">0%</span>
-                                    </div>
-                                    <div class="progress mb-3">
-                                        <div class="progress-bar bg-success" id="positive-bar" style="width: 0%"></div>
-                                    </div>
-                        </div>
-                        <div class="mb-3">
-                                    <div class="d-flex justify-content-between mb-2">
-                                        <span>😐 Neutral Responses</span>
-                                        <span class="fw-bold text-warning" id="neutral-sentiment">0%</span>
-                                    </div>
-                                    <div class="progress mb-3">
-                                        <div class="progress-bar bg-warning" id="neutral-bar" style="width: 0%"></div>
-                                    </div>
-                        </div>
-                        <div class="mb-3">
-                                    <div class="d-flex justify-content-between mb-2">
-                                        <span>😞 Negative Responses</span>
-                                        <span class="fw-bold text-danger" id="negative-sentiment">0%</span>
-                        </div>
-                                    <div class="progress mb-3">
-                                        <div class="progress-bar bg-danger" id="negative-bar" style="width: 0%"></div>
-                </div>
-                                </div>
-            </div>
-                        </div>
-                    </div>
-
-                    <!-- Real-time Activity Feed -->
-                    <div class="row">
-                        <div class="col-12">
-                            <div class="section-card">
-                                <h5 class="fw-bold mb-3">
-                                    <i class="fas fa-bolt me-2"></i>⚡ Real-time Activity Feed
-                                </h5>
-                                <div id="activity-feed" style="max-height: 300px; overflow-y: auto;">
-                                    <div class="text-center text-muted py-4">
-                                        <i class="fas fa-bolt fa-3x mb-3"></i>
-                                        <h5>Real-time Activity Feed</h5>
-                                        <p>Live updates will appear here as your AI system processes emails and generates responses.</p>
-                                        <small>Start a campaign to see real-time activity!</small>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Settings Tab -->
-                <div class="tab-pane fade" id="settings" role="tabpanel">
+                <!-- Settings Tab - Removed -->
                     <!-- Email Account Management -->
                     <div class="row mb-4">
                         <div class="col-12">
@@ -908,52 +719,16 @@ Your Team</textarea>
             document.getElementById('campaign-status').textContent = status;
         }
 
-        async function uploadBulkContacts() {
-            const fileInput = document.getElementById('bulkContactFile');
-            const file = fileInput.files[0];
-            
-            if (!file) {
-                showAlert('❌ Please select a file to upload', 'danger');
-                return;
-            }
-            
-            const formData = new FormData();
-            formData.append('file', file);
-            
-            try {
-                showAlert('📤 Uploading contacts...', 'info');
-                
-                const response = await fetch('/upload-bulk-contacts', {
-                    method: 'POST',
-                    body: formData
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    showAlert(`✅ Successfully uploaded ${result.count} contacts!`, 'success');
-                    fileInput.value = ''; // Clear file input
-                    await loadContacts();
-                    await loadCampaignStatus();
-                } else {
-                    showAlert(`❌ ${result.message}`, 'danger');
-                }
-            } catch (error) {
-                showAlert('Error uploading contacts: ' + error.message, 'danger');
-            }
-        }
 
         async function addContact() {
             const email = document.getElementById('email').value;
             const firstName = document.getElementById('firstName').value;
             const lastName = document.getElementById('lastName').value;
-            const gender = document.getElementById('gender').value;
 
             const formData = new FormData();
             formData.append('email', email);
             formData.append('first_name', firstName);
             formData.append('last_name', lastName);
-            formData.append('gender', gender);
 
             try {
                 const response = await fetch('/add-contact', {
