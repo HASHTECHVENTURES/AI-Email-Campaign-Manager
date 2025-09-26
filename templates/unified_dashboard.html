@@ -592,7 +592,6 @@ Your Team</textarea>
             loadReplies();
             loadMonitoringStatus();
             loadAnalyticsDashboard(); // Load INSANE analytics! 🔥
-            loadEmailAccounts(); // Load email accounts management
             setupEventListeners();
             
             // Auto-remove duplicates on page load
@@ -1931,128 +1930,6 @@ Your Team</textarea>
             }, 1000);
         }
 
-        // ==================== EMAIL ACCOUNT MANAGEMENT ====================
-
-        async function loadEmailAccounts() {
-            try {
-                const response = await fetch('/api/email-accounts');
-                const data = await response.json();
-                
-                if (data.success) {
-                    updateEmailAccountsDisplay(data.accounts, data.default_account);
-                } else {
-                    showAlert('❌ Failed to load email accounts', 'danger');
-                }
-            } catch (error) {
-                console.error('Error loading email accounts:', error);
-                showAlert('❌ Error loading email accounts', 'danger');
-            }
-        }
-
-        function updateEmailAccountsDisplay(accounts, defaultAccount) {
-            const container = document.getElementById('email-accounts-list');
-            let html = '';
-            
-            for (const [key, account] of Object.entries(accounts)) {
-                const isDefault = key === defaultAccount;
-                const statusClass = account.active ? 'success' : 'secondary';
-                const statusText = account.active ? 'Active' : 'Inactive';
-                
-                html += `
-                    <div class="card mb-3">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-start">
-                                <div>
-                                    <h6 class="fw-bold mb-1">
-                                        ${account.name}
-                                        ${isDefault ? '<span class="badge bg-primary ms-2">Default</span>' : ''}
-                                    </h6>
-                                    <p class="text-muted mb-2">${account.email}</p>
-                                    <span class="badge bg-${statusClass}">${statusText}</span>
-                                </div>
-                                <div class="btn-group">
-                                    <button class="btn btn-outline-primary btn-sm" onclick="editEmailAccount('${key}')">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button class="btn btn-outline-${account.active ? 'warning' : 'success'} btn-sm" 
-                                            onclick="toggleEmailAccount('${key}', ${!account.active})">
-                                        <i class="fas fa-${account.active ? 'pause' : 'play'}"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }
-            
-            container.innerHTML = html;
-            
-            // Update analytics
-            const totalAccounts = Object.keys(accounts).length;
-            const activeAccounts = Object.values(accounts).filter(acc => acc.active).length;
-            
-            document.getElementById('total-accounts').textContent = totalAccounts;
-            document.getElementById('active-accounts').textContent = activeAccounts;
-        }
-
-        async function editEmailAccount(accountId) {
-            showAlert('📧 Email account editing feature coming soon!', 'info');
-        }
-
-        async function toggleEmailAccount(accountId, active) {
-            try {
-                const response = await fetch('/api/email-accounts/update', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                        account_id: accountId,
-                        active: active
-                    })
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    showAlert(`✅ Email account ${active ? 'activated' : 'deactivated'} successfully`, 'success');
-                    loadEmailAccounts(); // Refresh the list
-                } else {
-                    showAlert(`❌ Failed to update email account: ${data.message}`, 'danger');
-                }
-            } catch (error) {
-                console.error('Error updating email account:', error);
-                showAlert('❌ Error updating email account', 'danger');
-            }
-        }
-
-        async function updateDefaultEmailAccount() {
-            try {
-                const accountId = document.getElementById('default-email-account').value;
-                
-                const response = await fetch('/api/email-accounts/set-default', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        account_id: accountId
-                    })
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    showAlert(`✅ Default email account set to ${accountId}`, 'success');
-                    loadEmailAccounts(); // Refresh the list
-                } else {
-                    showAlert(`❌ Failed to set default account: ${data.message}`, 'danger');
-                }
-            } catch (error) {
-                console.error('Error setting default email account:', error);
-                showAlert('❌ Error setting default email account', 'danger');
-            }
-        }
 
 
 
