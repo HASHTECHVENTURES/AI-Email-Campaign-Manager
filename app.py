@@ -1,3 +1,6 @@
+# BACKUP OF OLD APP.PY - REPLACED BY simple_working_app.py
+# This file contains Excel upload and bulk campaign features
+# Keep as reference but simple_working_app.py is now the main application
 from flask import Flask, render_template, request, redirect, url_for, flash, send_file, jsonify
 import os
 import pandas as pd

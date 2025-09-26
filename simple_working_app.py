@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# 🤖 AI EMAIL AUTOMATION SYSTEM - MAIN APPLICATION
+# Enhanced with comprehensive tracking and Gemini AI integration
 
 from flask import Flask, render_template, request, jsonify
 import smtplib
@@ -24,15 +26,234 @@ SMTP_PORT = 587
 GEMINI_API_KEY = "AIzaSyASwOL-TOo-FNBydsFTN_mWnN1zx7FJkX8"
 GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
 
-# SIMPLE DATA STORAGE
+# ENHANCED DATA STORAGE WITH ANALYTICS
 contacts = []
 sent_emails = []
 replies = []
 monitoring_active = False
 
+# 📊 COMPREHENSIVE EMAIL ANALYTICS
+email_analytics = {
+    'total_sent': 0,
+    'total_replies': 0,
+    'response_rate': 0.0,
+    'avg_response_time_hours': 0,
+    'campaigns_today': 0,
+    'ai_auto_replies': 0,
+    'manual_replies': 0,
+    'conversation_threads': {},
+    'daily_stats': {},
+    'best_response_times': [],
+    'engagement_metrics': {
+        'positive_responses': 0,
+        'neutral_responses': 0,
+        'negative_responses': 0
+    }
+}
+
+# 📊 ANALYTICS FUNCTIONS
+def calculate_analytics():
+    """Calculate comprehensive email analytics"""
+    global email_analytics, sent_emails, replies
+    
+    # Basic metrics
+    email_analytics['total_sent'] = len(sent_emails)
+    email_analytics['total_replies'] = len(replies)
+    
+    # Response rate calculation
+    if email_analytics['total_sent'] > 0:
+        email_analytics['response_rate'] = round((email_analytics['total_replies'] / email_analytics['total_sent']) * 100, 2)
+    else:
+        email_analytics['response_rate'] = 0.0
+    
+    # Calculate average response time
+    response_times = []
+    for reply in replies:
+        # Find corresponding sent email
+        reply_email = reply.get('from_email', '').lower()
+        for sent in sent_emails:
+            if sent.get('recipient', '').lower() == reply_email:
+                try:
+                    sent_time = datetime.fromisoformat(sent.get('sent_date', ''))
+                    reply_time = datetime.fromisoformat(reply.get('timestamp', ''))
+                    diff_hours = (reply_time - sent_time).total_seconds() / 3600
+                    response_times.append(diff_hours)
+                    break
+                except:
+                    continue
+    
+    if response_times:
+        email_analytics['avg_response_time_hours'] = round(sum(response_times) / len(response_times), 2)
+        email_analytics['best_response_times'] = sorted(response_times)[:5]  # Top 5 fastest
+    
+    # Count AI vs Manual replies
+    email_analytics['ai_auto_replies'] = sum(1 for r in replies if r.get('ai_auto_replied', False))
+    email_analytics['manual_replies'] = sum(1 for r in replies if r.get('manual_reply_sent', False))
+    
+    # Daily stats
+    today = datetime.now().strftime('%Y-%m-%d')
+    email_analytics['campaigns_today'] = sum(1 for s in sent_emails if s.get('sent_date', '').startswith(today))
+    
+    return email_analytics
+
+def track_email_sent(recipient, subject, campaign_type="Manual"):
+    """Enhanced email tracking"""
+    global sent_emails, email_analytics
+    
+    email_record = {
+        'recipient': recipient,
+        'subject': subject,
+        'campaign_type': campaign_type,
+        'sent_date': datetime.now().isoformat(),
+        'status': 'sent'
+    }
+    
+    sent_emails.append(email_record)
+    
+    # Update analytics
+    email_analytics['total_sent'] += 1
+    
+    # Update daily stats
+    today = datetime.now().strftime('%Y-%m-%d')
+    if today not in email_analytics['daily_stats']:
+        email_analytics['daily_stats'][today] = {'sent': 0, 'replies': 0}
+    email_analytics['daily_stats'][today]['sent'] += 1
+    
+    print(f"📊 TRACKED EMAIL: {recipient} | Total Sent: {email_analytics['total_sent']}")
+
+def track_reply_received(reply_data):
+    """Enhanced reply tracking"""
+    global email_analytics
+    
+    # Update analytics
+    email_analytics['total_replies'] += 1
+    
+    # Update daily stats
+    today = datetime.now().strftime('%Y-%m-%d')
+    if today not in email_analytics['daily_stats']:
+        email_analytics['daily_stats'][today] = {'sent': 0, 'replies': 0}
+    email_analytics['daily_stats'][today]['replies'] += 1
+    
+    # Recalculate response rate
+    calculate_analytics()
+    
+    print(f"📈 TRACKED REPLY: {reply_data.get('from_email')} | Total Replies: {email_analytics['total_replies']}")
+
+# 🤖 GEMINI AI FUNCTIONS
+def generate_ai_reply(original_message, sender_name=""):
+    """Generate AI reply using Gemini API"""
+    try:
+        # Prepare the prompt for Gemini
+        prompt = f"""
+        You are a professional email assistant. Generate a helpful, friendly, and professional reply to this email.
+        
+        Original message from {sender_name}:
+        {original_message}
+        
+        Generate a response that is:
+        - Professional and courteous
+        - Helpful and informative
+        - Concise (2-3 paragraphs max)
+        - Ends with a clear call to action or next step
+        
+        Do not include subject line or email headers, just the message body.
+        """
+        
+        payload = {
+            "contents": [{
+                "parts": [{"text": prompt}]
+            }]
+        }
+        
+        headers = {
+            'Content-Type': 'application/json'
+        }
+        
+        url = f"{GEMINI_API_URL}?key={GEMINI_API_KEY}"
+        
+        print(f"🤖 GENERATING AI REPLY for {sender_name}...")
+        response = requests.post(url, json=payload, headers=headers)
+        
+        if response.status_code == 200:
+            result = response.json()
+            ai_reply = result['candidates'][0]['content']['parts'][0]['text']
+            print(f"✅ AI REPLY GENERATED: {len(ai_reply)} characters")
+            return ai_reply.strip()
+        else:
+            print(f"❌ GEMINI API ERROR: {response.status_code} - {response.text}")
+            return None
+            
+    except Exception as e:
+        print(f"❌ AI REPLY ERROR: {str(e)}")
+        return None
+
+def send_ai_auto_reply(reply_data):
+    """Send automatic AI reply"""
+    try:
+        # Generate AI response
+        ai_response = generate_ai_reply(reply_data['content'], reply_data.get('from_name', ''))
+        
+        if not ai_response:
+            print(f"❌ FAILED to generate AI reply for {reply_data['from_email']}")
+            return False
+        
+        # Send the AI reply
+        msg = EmailMessage()
+        msg['From'] = EMAIL
+        msg['To'] = reply_data['from_email']
+        msg['Subject'] = f"Re: {reply_data['subject'].replace('Re: ', '')}"
+        msg.set_content(ai_response)
+        
+        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+            server.starttls()
+            server.login(EMAIL, PASSWORD)
+            server.send_message(msg)
+        
+        # Update reply data
+        reply_data['ai_auto_replied'] = True
+        reply_data['ai_reply_text'] = ai_response
+        reply_data['ai_reply_date'] = datetime.now().isoformat()
+        
+        # Update analytics
+        email_analytics['ai_auto_replies'] += 1
+        
+        print(f"🤖✅ AI AUTO-REPLY SENT TO: {reply_data['from_email']}")
+        return True
+        
+    except Exception as e:
+        print(f"❌ AI AUTO-REPLY FAILED: {str(e)}")
+        return False
+
 @app.route('/')
 def index():
     return render_template('unified_dashboard.html')
+
+@app.route('/api/analytics')
+def get_analytics():
+    """Get comprehensive email analytics"""
+    analytics = calculate_analytics()
+    print(f"📊 ANALYTICS REQUEST: {analytics['response_rate']}% response rate")
+    return jsonify(analytics)
+
+@app.route('/api/dashboard-stats')
+def get_dashboard_stats():
+    """Get real-time dashboard statistics"""
+    analytics = calculate_analytics()
+    
+    # Enhanced stats for dashboard
+    stats = {
+        'total_emails_sent': analytics['total_sent'],
+        'total_replies_received': analytics['total_replies'],
+        'response_rate': f"{analytics['response_rate']}%",
+        'avg_response_time': f"{analytics['avg_response_time_hours']:.1f} hours",
+        'campaigns_today': analytics['campaigns_today'],
+        'ai_auto_replies': analytics['ai_auto_replies'],
+        'manual_replies': analytics['manual_replies'],
+        'success_rate': f"{(analytics['ai_auto_replies'] / max(analytics['total_replies'], 1) * 100):.1f}%",
+        'daily_stats': analytics['daily_stats']
+    }
+    
+    return jsonify(stats)
 
 @app.route('/get-contacts')
 def get_contacts():
@@ -117,12 +338,8 @@ Your Team"""
                 contact['status'] = 'Sent'
                 contact['sent_date'] = datetime.now().isoformat()
                 
-                # Track sent email
-                sent_emails.append({
-                    'recipient': contact['email'],
-                    'subject': subject,
-                    'sent_date': datetime.now().isoformat()
-                })
+                # Enhanced email tracking
+                track_email_sent(contact['email'], subject, "Campaign")
                 
                 sent_count += 1
                 print(f"✅ EMAIL SENT TO: {contact['email']}")
@@ -172,6 +389,39 @@ def get_replies():
     print(f"📬 GET REPLIES: {len(replies)} replies")
     return jsonify(replies)
 
+@app.route('/api/send-ai-reply', methods=['POST'])
+def send_ai_reply():
+    """Send AI-generated reply to a specific email"""
+    global replies
+    
+    data = request.get_json()
+    reply_id = data.get('reply_id')
+    
+    if not reply_id:
+        return jsonify({'success': False, 'message': 'Reply ID required'})
+    
+    # Find the original reply
+    original_reply = None
+    for reply in replies:
+        if reply['id'] == reply_id:
+            original_reply = reply
+            break
+    
+    if not original_reply:
+        return jsonify({'success': False, 'message': 'Reply not found'})
+    
+    # Check if already replied
+    if original_reply.get('ai_auto_replied') or original_reply.get('manual_reply_sent'):
+        return jsonify({'success': False, 'message': 'Already replied to this email'})
+    
+    # Send AI auto-reply
+    success = send_ai_auto_reply(original_reply)
+    
+    if success:
+        return jsonify({'success': True, 'message': 'AI reply sent successfully'})
+    else:
+        return jsonify({'success': False, 'message': 'Failed to send AI reply'})
+
 @app.route('/api/send-manual-reply', methods=['POST'])
 def send_manual_reply():
     """Send a manual reply to a specific email"""
@@ -215,7 +465,11 @@ def send_manual_reply():
         original_reply['manual_reply_text'] = reply_text
         original_reply['manual_reply_date'] = datetime.now().isoformat()
         
+        # Update analytics
+        email_analytics['manual_replies'] += 1
+        
         print(f"✅ MANUAL REPLY SENT TO: {original_reply['from_email']}")
+        print(f"📊 MANUAL REPLIES: {email_analytics['manual_replies']}")
         
         return jsonify({'success': True, 'message': 'Manual reply sent successfully'})
         
@@ -394,8 +648,12 @@ def check_replies():
                         replies.append(reply)
                         new_replies += 1
                         
+                        # Enhanced reply tracking
+                        track_reply_received(reply)
+                        
                         print(f"📬 NEW REPLY FROM: {sender_email}")
                         print(f"📝 REPLY CONTENT: {content[:200]}...")
+                        print(f"📊 ANALYTICS: {email_analytics['response_rate']}% response rate")
                         
                         # Don't auto-reply, just store the reply for manual response
                         print(f"📬 REPLY STORED FOR MANUAL RESPONSE: {sender_email}")
