@@ -579,6 +579,34 @@ def clean_fake_emails():
         'removed_count': removed_count
     })
 
+@app.route('/api/clear-fake-emails', methods=['POST'])
+def clear_fake_emails():
+    """Clear the fake emails list"""
+    global fake_emails
+    
+    fake_emails = []
+    
+    return jsonify({
+        'success': True,
+        'message': 'Fake emails list cleared'
+    })
+
+@app.route('/api/reset-all-data', methods=['POST'])
+def reset_all_data():
+    """Reset all data (contacts, fake emails, etc.)"""
+    global contacts, sent_emails, replies, fake_emails, bounced_emails
+    
+    contacts = []
+    sent_emails = []
+    replies = []
+    fake_emails = []
+    bounced_emails = []
+    
+    return jsonify({
+        'success': True,
+        'message': 'All data reset successfully'
+    })
+
 if __name__ == '__main__':
     print("🚀 Starting AI Email Campaign Manager...")
     print(f"📧 Email: {EMAIL}")

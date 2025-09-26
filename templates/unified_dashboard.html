@@ -737,6 +737,51 @@ Your Team</textarea>
             }
         }
 
+        async function clearFakeEmails() {
+            if (!confirm('Are you sure you want to clear the fake emails list?')) return;
+            
+            try {
+                const response = await fetch('/api/clear-fake-emails', {
+                    method: 'POST'
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showAlert(result.message, 'success');
+                    await loadEmailStats();
+                    await loadFakeEmails();
+                } else {
+                    showAlert(result.message, 'danger');
+                }
+            } catch (error) {
+                showAlert('Error clearing fake emails', 'danger');
+            }
+        }
+
+        async function resetAllData() {
+            if (!confirm('Are you sure you want to reset ALL data? This will clear contacts, fake emails, and all other data!')) return;
+            
+            try {
+                const response = await fetch('/api/reset-all-data', {
+                    method: 'POST'
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showAlert(result.message, 'success');
+                    await loadContacts();
+                    await loadEmailStats();
+                    await loadFakeEmails();
+                } else {
+                    showAlert(result.message, 'danger');
+                }
+            } catch (error) {
+                showAlert('Error resetting data', 'danger');
+            }
+        }
+
         async function uploadBulkContacts() {
             const fileInput = document.getElementById('bulkContactFile');
             const file = fileInput.files[0];
