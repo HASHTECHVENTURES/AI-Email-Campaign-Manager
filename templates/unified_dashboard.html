@@ -482,6 +482,9 @@ Your Team</textarea>
                                         <button type="button" class="btn btn-warning" onclick="resetCampaign()">
                                             <i class="fas fa-undo me-2"></i>Reset Campaign
                             </button>
+                            <button type="button" class="btn btn-info" onclick="showEmailProgressDemo()">
+                                        <i class="fas fa-eye me-2"></i>Show Progress Demo
+                            </button>
                         </div>
                                 </form>
                     </div>
@@ -1194,6 +1197,15 @@ Your Team</textarea>
                 
                 if (result.success) {
                     showAlert('Campaign reset successfully!', 'success');
+                    
+                    // Reset the button state
+                    const startBtn = document.getElementById('startCampaignBtn');
+                    startBtn.disabled = false;
+                    startBtn.innerHTML = '<i class="fas fa-paper-plane me-2"></i>Start Email Campaign';
+                    
+                    // Hide progress section
+                    hideEmailProgress();
+                    
                     loadContacts();
                     loadCampaignStatus();
                 } else {
@@ -1536,6 +1548,22 @@ Your Team</textarea>
 
         function hideEmailProgress() {
             document.getElementById('emailProgress').style.display = 'none';
+        }
+
+        function showEmailProgressDemo() {
+            // Show the lazy loading progress with current contacts
+            if (contacts.length === 0) {
+                showAlert('Please add some contacts first to see the progress demo', 'warning');
+                return;
+            }
+            
+            // Initialize and show progress
+            initializeEmailProgress(contacts.length);
+            
+            // Start a demo of the progress system
+            startEmailProgressMonitoring();
+            
+            showAlert('📊 Lazy loading progress demo started! Watch the email sending progress.', 'info');
         }
 
         // Email Limits Functions
