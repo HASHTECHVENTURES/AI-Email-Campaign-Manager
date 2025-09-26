@@ -260,7 +260,7 @@ def check_for_new_emails():
                                     original_email = sent_email
                                     is_reply = True
                                     break
-                    
+        
                     # If no tracking ID found, check by subject and recipient
                     if not is_reply and ('Re:' in subject or 'RE:' in subject):
                         # Find original sent email
@@ -268,8 +268,8 @@ def check_for_new_emails():
                             if sent_email['recipient'].lower() == sender_email.lower():
                                 original_email = sent_email
                                 is_reply = True
-                                break
-        
+                    break
+    
                     if is_reply and original_email:
                         # Extract message content
                         message_content = ""
@@ -352,7 +352,7 @@ def start_email_monitoring():
                 check_for_new_emails()
                 # Check every 30 seconds
                 time.sleep(30)
-    except Exception as e:
+            except Exception as e:
                 print(f"❌ Monitoring error: {str(e)}")
                 time.sleep(60)  # Wait longer on error
     
@@ -799,7 +799,7 @@ def stop_monitoring():
     """Stop email monitoring"""
     try:
         stop_email_monitoring()
-    return jsonify({'success': True, 'message': 'Email monitoring stopped'})
+        return jsonify({'success': True, 'message': 'Email monitoring stopped'})
     except Exception as e:
         return jsonify({'success': False, 'message': f'Failed to stop monitoring: {str(e)}'})
 
