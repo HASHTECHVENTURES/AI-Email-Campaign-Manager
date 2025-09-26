@@ -233,14 +233,6 @@
                                         <label class="form-label">Last Name *</label>
                                         <input type="text" class="form-control" id="lastName" required>
                                     </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">Gender</label>
-                                        <select class="form-select" id="gender">
-                                        <option value="M">Male</option>
-                                        <option value="F">Female</option>
-                                        <option value="O">Other</option>
-                                    </select>
-                                </div>
                                     <button type="submit" class="btn btn-primary w-100">
                                         <i class="fas fa-plus me-2"></i>Add Contact
                             </button>
@@ -589,13 +581,11 @@ Your Team</textarea>
             const email = document.getElementById('email').value;
             const firstName = document.getElementById('firstName').value;
             const lastName = document.getElementById('lastName').value;
-            const gender = document.getElementById('gender').value;
 
             const formData = new FormData();
             formData.append('email', email);
             formData.append('first_name', firstName);
             formData.append('last_name', lastName);
-            formData.append('gender', gender);
 
             try {
                 const response = await fetch('/add-contact', {
