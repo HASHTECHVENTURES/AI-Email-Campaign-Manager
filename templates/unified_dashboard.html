@@ -503,7 +503,7 @@ Your Team</textarea>
                     </div>
                 </div>
             </div>
-            
+
             <!-- Email Limits Tab -->
             <div class="tab-pane fade" id="limits" role="tabpanel">
                 <div class="row">
@@ -609,12 +609,18 @@ Your Team</textarea>
             loadCampaignStatus();
             loadMonitoringStatus();
             loadEmailLimits();
+            loadBouncedEmails();
             setupEventListeners();
             
             // Auto-start monitoring when page loads
             setTimeout(() => {
                 startEmailMonitoring();
             }, 2000); // Start after 2 seconds
+            
+            // Auto-check bounces every 5 minutes
+            setInterval(() => {
+                checkBounces();
+            }, 300000); // 5 minutes = 300,000 milliseconds
             
         
         // LIVE CONTINUOUS EMAIL MONITORING
@@ -1608,6 +1614,94 @@ Your Team</textarea>
                 }
             } catch (error) {
                 showAlert('Error updating email limits', 'danger');
+            }
+        }
+
+        // Bounce Detection Functions
+        async function checkBounces() {
+            try {
+                showAlert('Checking for bounced emails...', 'info');
+                
+                const response = await fetch('/api/check-bounces', {
+                    method: 'POST'
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showAlert(`✅ ${result.message}`, 'success');
+                    await loadEmailStats();
+                    await loadBouncedEmails();
+                } else {
+                    showAlert(result.message, 'danger');
+                }
+            } catch (error) {
+                showAlert('Error checking bounces', 'danger');
+            }
+        }
+
+        async function simulateBounce() {
+            const email = prompt('Enter email to simulate bounce (or leave empty for test@example.com):') || 'test@example.com';
+            const errorTypes = ['user_unknown', 'mailbox_full', 'domain_not_found', 'blocked', 'invalid_recipient'];
+            const errorType = errorTypes[Math.floor(Math.random() * errorTypes.length)];
+            
+            try {
+                const response = await fetch('/api/simulate-bounce', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        error_type: errorType
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showAlert(`🚫 ${result.message}`, 'warning');
+                    await loadEmailStats();
+                    await loadBouncedEmails();
+                } else {
+                    showAlert(result.message, 'danger');
+                }
+            } catch (error) {
+                showAlert('Error simulating bounce', 'danger');
+            }
+        }
+
+        async function loadBouncedEmails() {
+            try {
+                const response = await fetch('/api/bounced-emails');
+                const bouncedEmails = await response.json();
+                
+                const bouncedEmailsList = document.getElementById('bouncedEmailsList');
+                if (bouncedEmailsList) {
+                    if (bouncedEmails.length === 0) {
+                        bouncedEmailsList.innerHTML = `
+                            <div class="text-center text-muted">
+                                <i class="fas fa-check-circle fa-2x mb-2 text-success"></i>
+                                <p>No bounced emails detected</p>
+                            </div>
+                        `;
+                    } else {
+                        bouncedEmailsList.innerHTML = bouncedEmails.map(bounce => `
+                            <div class="d-flex justify-content-between align-items-center p-2 border-bottom">
+                                <div>
+                                    <strong>${bounce.email}</strong>
+                                    <br>
+                                    <small class="text-danger">${bounce.reason}</small>
+                                    <br>
+                                    <small class="text-muted">${new Date(bounce.timestamp).toLocaleString()}</small>
+                                </div>
+                                <span class="badge ${bounce.bounce_type === 'hard' ? 'bg-danger' : 'bg-warning'}">${bounce.bounce_type}</span>
+                            </div>
+                        `).join('');
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading bounced emails:', error);
             }
         }
 
