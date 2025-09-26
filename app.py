@@ -1,10 +1,9 @@
+#!/usr/bin/env python3
 """
-Vercel Serverless Function Entry Point
-AI Email Campaign Manager - Production Deployment
+AI Email Campaign Manager - Clean Local Version
+Optimized for local development and production use
 """
 
-import os
-import sys
 from flask import Flask, render_template, request, jsonify
 import smtplib
 from email.message import EmailMessage
@@ -12,39 +11,34 @@ from datetime import datetime
 import requests
 import json
 
-# Initialize Flask app
 app = Flask(__name__)
 
 # Email Configuration
-EMAIL = os.getenv('EMAIL', 'karmaterra427@gmail.com')
-PASSWORD = os.getenv('PASSWORD', 'jidw kfwg hpsh diqi')
+EMAIL = "karmaterra427@gmail.com"
+PASSWORD = "jidw kfwg hpsh diqi"
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 587
 
 # Gemini AI Configuration
-GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', 'AIzaSyASwOL-TOo-FNBydsFTN_mWnN1zx7FJkX8')
+GEMINI_API_KEY = "AIzaSyASwOL-TOo-FNBydsFTN_mWnN1zx7FJkX8"
 GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
 
-# Global data storage (in-memory for serverless)
+# Data Storage
 contacts = []
 sent_emails = []
 replies = []
-monitoring_active = False
 
-# Email analytics
+# Analytics
 email_analytics = {
     'total_sent': 0,
     'total_replies': 0,
     'response_rate': 0.0,
-    'avg_response_time_hours': 0,
-    'campaigns_today': 0,
     'ai_auto_replies': 0,
-    'manual_replies': 0,
-    'daily_stats': {}
+    'manual_replies': 0
 }
 
 def calculate_analytics():
-    """Calculate comprehensive email analytics"""
+    """Calculate email analytics"""
     global email_analytics, sent_emails, replies
     
     email_analytics['total_sent'] = len(sent_emails)
@@ -58,7 +52,7 @@ def calculate_analytics():
     return email_analytics
 
 def track_email_sent(recipient, subject, campaign_type="Manual"):
-    """Enhanced email tracking"""
+    """Track sent emails"""
     global sent_emails, email_analytics
     
     email_record = {
@@ -112,6 +106,7 @@ def generate_ai_reply(original_message, sender_name=""):
         print(f"AI Reply Error: {str(e)}")
         return None
 
+# Routes
 @app.route('/')
 def index():
     return render_template('unified_dashboard.html')
@@ -131,8 +126,6 @@ def get_dashboard_stats():
         'total_emails_sent': analytics['total_sent'],
         'total_replies_received': analytics['total_replies'],
         'response_rate': f"{analytics['response_rate']}%",
-        'avg_response_time': f"{analytics['avg_response_time_hours']:.1f} hours",
-        'campaigns_today': analytics['campaigns_today'],
         'ai_auto_replies': analytics['ai_auto_replies'],
         'manual_replies': analytics['manual_replies'],
         'success_rate': f"{(analytics['ai_auto_replies'] / max(analytics['total_replies'], 1) * 100):.1f}%"
@@ -246,7 +239,7 @@ Your Team"""
                 contact['status'] = 'Sent'
                 contact['sent_date'] = datetime.now().isoformat()
                 
-                # Enhanced email tracking
+                # Track email
                 track_email_sent(contact['email'], subject, "Campaign")
                 
                 sent_count += 1
@@ -283,22 +276,18 @@ def get_replies():
 def get_monitoring_status():
     """Get email monitoring status"""
     return jsonify({
-        'monitoring': monitoring_active,
-        'status': 'active' if monitoring_active else 'inactive'
+        'monitoring': False,
+        'status': 'inactive'
     })
 
 @app.route('/api/email-monitoring/start', methods=['POST'])
 def start_monitoring():
     """Start email monitoring"""
-    global monitoring_active
-    monitoring_active = True
     return jsonify({'success': True, 'message': 'Email monitoring started'})
 
 @app.route('/api/email-monitoring/stop', methods=['POST'])
 def stop_monitoring():
     """Stop email monitoring"""
-    global monitoring_active
-    monitoring_active = False
     return jsonify({'success': True, 'message': 'Email monitoring stopped'})
 
 @app.route('/remove-contact', methods=['POST'])
@@ -339,6 +328,62 @@ def reset_campaign():
     
     return jsonify({'success': True, 'message': 'Campaign reset successfully'})
 
-# Vercel serverless function handler
-def handler(request):
-    return app(request.environ, lambda *args: None)
+@app.route('/api/send-ai-reply', methods=['POST'])
+def send_ai_reply():
+    """Send AI-generated reply"""
+    data = request.get_json()
+    reply_id = data.get('reply_id')
+    
+    if not reply_id:
+        return jsonify({'success': False, 'message': 'Reply ID required'})
+    
+    # Find the original reply
+    original_reply = None
+    for reply in replies:
+        if reply['id'] == reply_id:
+            original_reply = reply
+            break
+    
+    if not original_reply:
+        return jsonify({'success': False, 'message': 'Reply not found'})
+    
+    # Generate AI response
+    ai_response = generate_ai_reply(original_reply.get('content', ''), original_reply.get('from_name', ''))
+    
+    if not ai_response:
+        return jsonify({'success': False, 'message': 'Failed to generate AI reply'})
+    
+    try:
+        # Send the AI reply
+        msg = EmailMessage()
+        msg['From'] = EMAIL
+        msg['To'] = original_reply['from_email']
+        msg['Subject'] = f"Re: {original_reply['subject'].replace('Re: ', '')}"
+        msg.set_content(ai_response)
+        
+        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+            server.starttls()
+            server.login(EMAIL, PASSWORD)
+            server.send_message(msg)
+        
+        # Update reply data
+        original_reply['ai_auto_replied'] = True
+        original_reply['ai_reply_text'] = ai_response
+        original_reply['ai_reply_date'] = datetime.now().isoformat()
+        
+        # Update analytics
+        email_analytics['ai_auto_replies'] += 1
+        
+        return jsonify({'success': True, 'message': 'AI reply sent successfully'})
+        
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Error sending reply: {str(e)}'})
+
+if __name__ == '__main__':
+    print("🚀 Starting AI Email Campaign Manager...")
+    print(f"📧 Email: {EMAIL}")
+    print(f"🤖 AI: {'Configured' if GEMINI_API_KEY else 'Not configured'}")
+    print("🌐 Server starting on http://localhost:5008")
+    print("=" * 50)
+    
+    app.run(debug=True, host='0.0.0.0', port=5008)

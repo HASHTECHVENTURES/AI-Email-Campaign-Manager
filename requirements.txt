@@ -1,8 +1,10 @@
-# AI Email Campaign Manager - Vercel Production Dependencies
+# AI Email Campaign Manager - Clean Dependencies
+# Optimized for local development
+
+# Core Framework
 Flask==3.1.2
-Werkzeug==3.1.3
-pandas==2.3.2
-numpy==2.0.2
-openpyxl==3.1.5
-python-dotenv==1.1.1
+
+# HTTP Requests
 requests==2.31.0
+
+# Note: Install with: pip install -r requirements.txt
