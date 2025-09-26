@@ -522,6 +522,38 @@
                     </div>
                 </div>
             </div>
+            
+            <!-- AI Reply Control - Prominent Section -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="section-card">
+                        <h4 class="fw-bold mb-3">
+                            <i class="fas fa-robot me-2"></i>AI Reply Control
+                        </h4>
+                        <div class="row align-items-center">
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-center">
+                                    <span id="ai-replies-status-prominent" class="badge bg-success me-3">
+                                        <i class="fas fa-robot me-1"></i>AI Replies Enabled
+                                    </span>
+                                    <span class="text-muted">Automatic AI responses are currently active</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6 text-end">
+                                <button id="toggle-ai-replies-prominent" class="btn btn-warning btn-lg" onclick="toggleAIReplies()">
+                                    <i class="fas fa-pause me-2"></i>Stop AI Replies
+                                </button>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <small class="text-muted">
+                                <i class="fas fa-info-circle me-1"></i>
+                                When disabled, AI won't send automatic replies to new customer emails. Email monitoring continues.
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <!-- Main Content Tabs -->
             <ul class="nav nav-tabs mb-4" id="mainTabs" role="tablist">
@@ -710,11 +742,11 @@
                     
                     <div class="row">
                         <!-- Campaign Setup -->
-                        <div class="col-md-6">
+                <div class="col-md-6">
                     <div class="section-card">
                                 <h4 class="fw-bold mb-3">
                                     <i class="fas fa-cog me-2"></i>Campaign Setup
-                                </h4>
+                        </h4>
                                 
                                 <!-- AI Reply Control - Main Dashboard -->
                                 <div class="mb-3 p-3 bg-light rounded">
@@ -1878,6 +1910,10 @@ Your Team</textarea>
         }
         
         function updateAIRepliesStatus(enabled) {
+            // Update prominent dashboard button
+            const statusElementProminent = document.getElementById('ai-replies-status-prominent');
+            const buttonElementProminent = document.getElementById('toggle-ai-replies-prominent');
+            
             // Update main dashboard button
             const statusElementMain = document.getElementById('ai-replies-status-main');
             const buttonElementMain = document.getElementById('toggle-ai-replies-main');
@@ -1887,6 +1923,16 @@ Your Team</textarea>
             const buttonElement = document.getElementById('toggle-ai-replies');
             
             if (enabled) {
+                // Prominent dashboard
+                if (statusElementProminent) {
+                    statusElementProminent.innerHTML = '<i class="fas fa-robot me-1"></i>AI Replies Enabled';
+                    statusElementProminent.className = 'badge bg-success me-3';
+                }
+                if (buttonElementProminent) {
+                    buttonElementProminent.innerHTML = '<i class="fas fa-pause me-2"></i>Stop AI Replies';
+                    buttonElementProminent.className = 'btn btn-warning btn-lg';
+                }
+                
                 // Main dashboard
                 if (statusElementMain) {
                     statusElementMain.innerHTML = '<i class="fas fa-robot me-1"></i>Enabled';
@@ -1907,6 +1953,16 @@ Your Team</textarea>
                     buttonElement.className = 'btn btn-warning btn-sm w-100';
                 }
             } else {
+                // Prominent dashboard
+                if (statusElementProminent) {
+                    statusElementProminent.innerHTML = '<i class="fas fa-robot me-1"></i>AI Replies Disabled';
+                    statusElementProminent.className = 'badge bg-danger me-3';
+                }
+                if (buttonElementProminent) {
+                    buttonElementProminent.innerHTML = '<i class="fas fa-play me-2"></i>Start AI Replies';
+                    buttonElementProminent.className = 'btn btn-success btn-lg';
+                }
+                
                 // Main dashboard
                 if (statusElementMain) {
                     statusElementMain.innerHTML = '<i class="fas fa-robot me-1"></i>Disabled';
