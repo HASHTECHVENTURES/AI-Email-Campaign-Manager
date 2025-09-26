@@ -349,7 +349,10 @@ Your Team</textarea>
                                         </span>
                                         <button class="btn btn-info btn-sm" onclick="checkForReplies()">
                                             <i class="fas fa-sync me-1"></i>Refresh Now
-                                    </button>
+                                        </button>
+                                        <button class="btn btn-success btn-sm ms-2" onclick="manualCheckAndReply()">
+                                            <i class="fas fa-robot me-1"></i>AI Check & Reply
+                                        </button>
                                 </div>
                             </div>
                                 <div id="repliesList">
@@ -734,6 +737,26 @@ Your Team</textarea>
                                         </div>
                                     </div>
                                 </div>
+                                <div class="row mt-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Email Check Interval</label>
+                                        <select class="form-select" id="check-interval">
+                                            <option value="300000">5 minutes</option>
+                                            <option value="600000" selected>10 minutes</option>
+                                            <option value="900000">15 minutes</option>
+                                            <option value="1800000">30 minutes</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">AI Auto-Reply</label>
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="ai-auto-reply" checked>
+                                            <label class="form-check-label" for="ai-auto-reply">
+                                                Enable AI Auto-Reply
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -775,10 +798,36 @@ Your Team</textarea>
                 startEmailMonitoring();
             }, 2000); // Start after 2 seconds
             
-            // Auto-refresh analytics every 30 seconds
-            setInterval(() => {
-                loadAnalyticsDashboard();
-            }, 30000);
+        // Auto-refresh analytics every 30 seconds
+        setInterval(() => {
+            loadAnalyticsDashboard();
+        }, 30000);
+        
+        // Auto-check for replies based on user settings
+        let emailCheckInterval;
+        
+        function startEmailCheckInterval() {
+            const interval = document.getElementById('check-interval')?.value || 600000; // Default 10 minutes
+            const aiAutoReply = document.getElementById('ai-auto-reply')?.checked || true;
+            
+            if (emailCheckInterval) {
+                clearInterval(emailCheckInterval);
+            }
+            
+            emailCheckInterval = setInterval(() => {
+                console.log('🔄 Auto-checking for replies...');
+                if (aiAutoReply) {
+                    manualCheckAndReply();
+                } else {
+                    checkForReplies();
+                }
+            }, parseInt(interval));
+            
+            console.log(`🔄 Email checking started every ${interval/60000} minutes`);
+        }
+        
+        // Start the interval
+        startEmailCheckInterval();
         });
 
         function setupEventListeners() {
@@ -1211,6 +1260,39 @@ Your Team</textarea>
                 }
             } catch (error) {
                 showAlert('Error checking for replies: ' + error.message, 'danger');
+            }
+        }
+
+        async function manualCheckAndReply() {
+            try {
+                showAlert('🤖 AI is checking for replies and will auto-reply...', 'info');
+                
+                // First check for replies
+                const checkResponse = await fetch('/api/email-monitoring/check-now', {
+                    method: 'POST'
+                });
+                
+                const checkResult = await checkResponse.json();
+                
+                if (checkResult.success && checkResult.replies_count > 0) {
+                    showAlert(`✅ Found ${checkResult.replies_count} replies! AI is generating responses...`, 'success');
+                    
+                    // Reload replies to show new ones
+                    await loadReplies();
+                    
+                    // Give AI time to process and reply
+                    setTimeout(() => {
+                        showAlert('🤖 AI has processed replies and sent responses!', 'success');
+                        loadReplies(); // Refresh to show AI replies
+                    }, 3000);
+                    
+                } else {
+                    showAlert('ℹ️ No new replies found to process', 'info');
+                }
+                
+            } catch (error) {
+                console.error('Error in manual AI check:', error);
+                showAlert('❌ Error in AI check and reply', 'danger');
             }
         }
 
