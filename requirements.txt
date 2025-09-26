@@ -1,8 +1,9 @@
-# AI Email Campaign Manager - Clean Dependencies
-# Optimized for local development
+# AI Email Campaign Manager - Production Dependencies
+# Optimized for Vercel deployment
 
 # Core Framework
 Flask==3.1.2
+gunicorn==21.2.0
 
 # HTTP Requests
 requests==2.31.0
@@ -14,4 +15,5 @@ openpyxl==3.1.5
 # Email Validation
 dnspython==2.4.2
 
-# Note: Install with: pip install -r requirements.txt
+# Production WSGI Server
+waitress==3.0.0

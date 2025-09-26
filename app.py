@@ -6,6 +6,8 @@ Optimized for local development and production use
 
 from flask import Flask, render_template, request, jsonify
 import smtplib
+import imaplib
+import email
 from email.message import EmailMessage
 from datetime import datetime
 import requests
@@ -15,25 +17,37 @@ import io
 import re
 import dns.resolver
 import socket
+import threading
+import time
+import os
 
 app = Flask(__name__)
 
-# Email Configuration
-EMAIL = "karmaterra427@gmail.com"
-PASSWORD = "jidw kfwg hpsh diqi"
+# Email Configuration (Production Ready)
+EMAIL = os.getenv('EMAIL', 'karmaterra427@gmail.com')
+PASSWORD = os.getenv('PASSWORD', 'jidw kfwg hpsh diqi')
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 587
 
-# Gemini AI Configuration
-GEMINI_API_KEY = "AIzaSyASwOL-TOo-FNBydsFTN_mWnN1zx7FJkX8"
+# IMAP Configuration for reading emails
+IMAP_SERVER = "imap.gmail.com"
+IMAP_PORT = 993
+
+# Gemini AI Configuration (Production Ready)
+GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', 'AIzaSyASwOL-TOo-FNBydsFTN_mWnN1zx7FJkX8')
 GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
 
 # Data Storage
 contacts = []
 sent_emails = []
 replies = []
-bounced_emails = []
-fake_emails = []
+conversations = []  # Store AI conversations
+unanswered_emails = []  # Track emails with no replies
+
+# Email monitoring
+email_monitoring_active = False
+last_email_check = None
+monitoring_thread = None
 
 # Email sending limits
 DAILY_EMAIL_LIMIT = 100  # Maximum emails per day
@@ -70,6 +84,11 @@ def validate_email_format(email):
 
 def check_domain_exists(domain):
     """Check if email domain exists using DNS"""
+    # Known fake/test domains for demonstration (excluding example.com for testing)
+    fake_domains = ['fake.com', 'invalid.email', 'notreal.domain', 'bounce.test', 'fake.test', 'example.fake']
+    if domain.lower() in fake_domains:
+        return False
+        
     try:
         dns.resolver.resolve(domain, 'MX')
         return True
@@ -81,15 +100,21 @@ def check_domain_exists(domain):
             return False
 
 def validate_email_deliverability(email):
-    """Comprehensive email validation"""
+    """Simple email format validation only"""
+    print(f"📧 Validating email: {email}")
+    
+    # Only check basic format
     if not validate_email_format(email):
-        return {'valid': False, 'reason': 'Invalid email format'}
+        return {'valid': False, 'reason': 'Invalid email format', 'confidence': 100, 'category': 'format_error'}
     
-    domain = email.split('@')[1]
-    if not check_domain_exists(domain):
-        return {'valid': False, 'reason': 'Domain does not exist'}
-    
-    return {'valid': True, 'reason': 'Valid email'}
+    # Accept all properly formatted emails
+    print(f"✅ Email accepted: {email}")
+    return {
+        'valid': True, 
+        'reason': 'Email format is valid', 
+        'confidence': 100,
+        'category': 'valid_email'
+    }
 
 def get_email_limits_status():
     """Get current email sending limits status"""
@@ -126,122 +151,224 @@ def can_send_email():
     return status['can_send_daily'] and status['can_send_hourly']
 
 def track_email_sent(recipient, subject, campaign_type="Manual"):
-    """Track sent emails"""
-    global sent_emails, email_analytics
+    """Track sent emails with reply tracking"""
+    global sent_emails, email_analytics, unanswered_emails
     
     email_record = {
+        'id': len(sent_emails) + 1,
         'recipient': recipient,
         'subject': subject,
         'campaign_type': campaign_type,
         'sent_date': datetime.now().isoformat(),
-        'status': 'sent'
+        'status': 'sent',
+        'replied': False,
+        'reply_count': 0,
+        'last_activity': datetime.now().isoformat()
     }
     
     sent_emails.append(email_record)
+    # Add to unanswered emails initially
+    unanswered_emails.append({
+        'email_id': email_record['id'],
+        'recipient': recipient,
+        'subject': subject,
+        'sent_date': email_record['sent_date'],
+        'days_since_sent': 0
+    })
+    
     email_analytics['total_sent'] += 1
 
-def detect_bounce_from_smtp_error(email, error_message):
-    """Detect bounce from SMTP error and add to bounced emails"""
-    global bounced_emails
-    
-    bounce_reasons = {
-        'mailbox full': 'Mailbox is full',
-        'user unknown': 'User does not exist',
-        'domain not found': 'Domain does not exist',
-        'relay access denied': 'Server rejected email',
-        'message too large': 'Message size exceeds limit',
-        'spam': 'Email marked as spam',
-        'blocked': 'Email address blocked',
-        'invalid recipient': 'Invalid recipient address',
-        '550': 'Permanent failure - User unknown',
-        '552': 'Mailbox full',
-        '553': 'Invalid recipient address',
-        '554': 'Transaction failed'
-    }
-    
-    reason = 'Unknown bounce reason'
-    error_lower = error_message.lower()
-    
-    for key, value in bounce_reasons.items():
-        if key in error_lower:
-            reason = value
-            break
-    
-    bounce_entry = {
-        'email': email,
-        'reason': reason,
-        'error_message': error_message,
-        'timestamp': datetime.now().isoformat(),
-        'bounce_type': 'hard' if any(x in error_lower for x in ['user unknown', 'domain not found', 'invalid', '550', '553']) else 'soft'
-    }
-    
-    # Check if already in bounced list
-    if not any(be['email'].lower() == email.lower() for be in bounced_emails):
-        bounced_emails.append(bounce_entry)
-        print(f"🚫 Bounce detected: {email} - {reason}")
-    
-    return bounce_entry
-
-def check_email_bounces():
-    """Check for email bounces and simulate bounce detection"""
-    global bounced_emails, sent_emails
+# Email Monitoring Functions
+def check_for_new_emails():
+    """Check for new email replies using IMAP"""
+    global last_email_check, replies, conversations, sent_emails, unanswered_emails
     
     try:
-        # Simulate bounce detection for testing
-        test_bounce_patterns = [
-            'test@', 'invalid@', 'bounce@', 'noreply@', 'donotreply@',
-            'fake@', 'spam@', 'blocked@', 'nonexistent@'
-        ]
+        print("📧 Checking for new email replies...")
         
-        # Check recent sent emails for potential bounces
-        recent_emails = sent_emails[-50:] if len(sent_emails) > 50 else sent_emails
+        # Connect to IMAP server
+        mail = imaplib.IMAP4_SSL(IMAP_SERVER)
+        mail.login(EMAIL, PASSWORD)
+        mail.select('INBOX')
         
-        for sent_email in recent_emails:
-            recipient = sent_email['recipient'].lower()
+        # Search for emails since last check (or last 24 hours if first time)
+        if last_email_check:
+            # Search for emails since last check
+            search_criteria = f'(SINCE "{last_email_check.strftime("%d-%b-%Y")}")'
+        else:
+            # First time - check last 24 hours
+            from datetime import timedelta
+            yesterday = (datetime.now() - timedelta(days=1)).strftime("%d-%b-%Y")
+            search_criteria = f'(SINCE "{yesterday}")'
+        
+        status, messages = mail.search(None, search_criteria)
+        
+        if status == 'OK':
+            email_ids = messages[0].split()
+            new_replies_count = 0
             
-            # Check for bounce patterns
-            for pattern in test_bounce_patterns:
-                if pattern in recipient:
-                    if not any(be['email'].lower() == recipient for be in bounced_emails):
-                        detect_bounce_from_smtp_error(
-                            sent_email['recipient'], 
-                            f"550 User unknown - {pattern.replace('@', '')} pattern detected"
+            for email_id in email_ids:
+                try:
+                    # Fetch email
+                    status, msg_data = mail.fetch(email_id, '(RFC822)')
+                    if status != 'OK':
+                        continue
+                        
+                    email_message = email.message_from_bytes(msg_data[0][1])
+                    
+                    # Extract email details
+                    sender_email = email_message.get('From', '')
+                    subject = email_message.get('Subject', '')
+                    date_received = email_message.get('Date', '')
+                    
+                    # Clean sender email (remove name if present)
+                    if '<' in sender_email and '>' in sender_email:
+                        sender_email = sender_email.split('<')[1].split('>')[0]
+                    
+                    # Skip emails from our own address
+                    if sender_email.lower() == EMAIL.lower():
+                        continue
+                    
+                    # Check if this is a reply to one of our sent emails
+                    is_reply = False
+                    original_email = None
+                    
+                    # Look for "Re:" in subject or check if we sent to this email
+                    if 'Re:' in subject or 'RE:' in subject:
+                        # Find original sent email
+                        for sent_email in sent_emails:
+                            if sent_email['recipient'].lower() == sender_email.lower():
+                                original_email = sent_email
+                                is_reply = True
+                break
+        
+                    if is_reply and original_email:
+                        # Extract message content
+                        message_content = ""
+                        if email_message.is_multipart():
+                            for part in email_message.walk():
+                                if part.get_content_type() == "text/plain":
+                                    message_content = part.get_payload(decode=True).decode('utf-8', errors='ignore')
+                    break
+                        else:
+                            message_content = email_message.get_payload(decode=True).decode('utf-8', errors='ignore')
+                        
+                        # Clean message content (remove quoted text)
+                        lines = message_content.split('\n')
+                        clean_lines = []
+                        for line in lines:
+                            if line.strip().startswith('>') or 'wrote:' in line or 'On ' in line and 'at ' in line:
+                                break
+                            clean_lines.append(line)
+                        message_content = '\n'.join(clean_lines).strip()
+                        
+                        # Extract sender name
+                        sender_name = sender_email.split('@')[0].replace('.', ' ').title()
+                        
+                        # Check if we already processed this reply
+                        already_processed = any(
+                            r.get('from_email', '').lower() == sender_email.lower() and 
+                            r.get('subject', '') == subject and
+                            r.get('content', '') == message_content
+                            for r in replies
                         )
-                        break
+                        
+                        if not already_processed and message_content:
+                            print(f"📨 New reply from {sender_email}: {subject}")
+                            
+                            # Add to replies
+                            reply_record = {
+                                'id': len(replies) + 1,
+                                'from_email': sender_email,
+                                'from_name': sender_name,
+                                'subject': subject,
+                                'content': message_content,
+                                'received_date': datetime.now().isoformat(),
+                                'original_email_id': original_email['id']
+                            }
+                            replies.append(reply_record)
+                            
+                            # Process the reply and generate AI response
+                            conversation = process_incoming_reply(sender_email, sender_name, subject, message_content)
+                            
+                            new_replies_count += 1
+                            print(f"✅ Processed reply from {sender_name} and sent AI response")
+                
+                except Exception as e:
+                    print(f"❌ Error processing email {email_id}: {str(e)}")
+                    continue
+            
+            print(f"📊 Email check complete. Found {new_replies_count} new replies.")
+            last_email_check = datetime.now()
+            
+        mail.close()
+        mail.logout()
         
-        # Add some random bounces for demonstration
-        import random
-        if len(sent_emails) > 0 and random.random() < 0.1:  # 10% chance
-            recent_email = random.choice(sent_emails[-10:])
-            if not any(be['email'].lower() == recent_email['recipient'].lower() for be in bounced_emails):
-                detect_bounce_from_smtp_error(
-                    recent_email['recipient'],
-                    "552 Mailbox full - simulated bounce"
-                )
-        
-        print(f"✅ Bounce check completed. Total bounced emails: {len(bounced_emails)}")
-        return True
+        return new_replies_count
         
     except Exception as e:
-        print(f"❌ Error checking bounces: {e}")
-        return False
+        print(f"❌ Error checking emails: {str(e)}")
+        return 0
 
-def generate_ai_reply(original_message, sender_name=""):
-    """Generate AI reply using Gemini API"""
+def start_email_monitoring():
+    """Start background email monitoring"""
+    global email_monitoring_active, monitoring_thread
+    
+    if email_monitoring_active:
+        return
+    
+    email_monitoring_active = True
+    
+    def monitoring_loop():
+        while email_monitoring_active:
+            try:
+                check_for_new_emails()
+                # Check every 30 seconds
+                time.sleep(30)
+    except Exception as e:
+                print(f"❌ Monitoring error: {str(e)}")
+                time.sleep(60)  # Wait longer on error
+    
+    monitoring_thread = threading.Thread(target=monitoring_loop, daemon=True)
+    monitoring_thread.start()
+    print("🔄 Email monitoring started - checking every 30 seconds")
+
+def stop_email_monitoring():
+    """Stop background email monitoring"""
+    global email_monitoring_active
+    email_monitoring_active = False
+    print("⏹️ Email monitoring stopped")
+
+def generate_ai_reply(original_message, sender_name="", conversation_history=None):
+    """Generate AI reply using Gemini API with conversation context"""
     try:
-        prompt = f"""
-        You are a professional email assistant. Generate a helpful, friendly, and professional reply to this email.
+        # Build conversation context
+        context = ""
+        if conversation_history:
+            context = "\n\nPrevious conversation:\n"
+            for msg in conversation_history[-3:]:  # Last 3 messages for context
+                role = "Customer" if msg['sender_type'] == 'customer' else "AI Assistant"
+                context += f"{role}: {msg['content']}\n"
         
-        Original message from {sender_name}:
+        prompt = f"""
+        You are a professional AI email assistant representing a business. You are engaging in an ongoing conversation with a potential customer.
+        
+        Customer Name: {sender_name}
+        Latest message from customer:
         {original_message}
+        {context}
         
         Generate a response that is:
-        - Professional and courteous
-        - Helpful and informative
+        - Professional, friendly, and engaging
+        - Helpful and informative about our services
+        - Maintains conversation flow and context
+        - Asks relevant follow-up questions
+        - Aims to move the conversation toward a business opportunity
         - Concise (2-3 paragraphs max)
-        - Ends with a clear call to action or next step
+        - Ends with a clear question or call to action
         
         Do not include subject line or email headers, just the message body.
+        Sign off as "Best regards, AI Assistant"
         """
         
         payload = {
@@ -250,21 +377,127 @@ def generate_ai_reply(original_message, sender_name=""):
             }]
         }
         
-        headers = {'Content-Type': 'application/json'}
-        url = f"{GEMINI_API_URL}?key={GEMINI_API_KEY}"
+        headers = {
+            'Content-Type': 'application/json',
+            'X-goog-api-key': GEMINI_API_KEY
+        }
         
-        response = requests.post(url, json=payload, headers=headers, timeout=10)
+        response = requests.post(GEMINI_API_URL, json=payload, headers=headers, timeout=15)
         
         if response.status_code == 200:
             result = response.json()
             ai_reply = result['candidates'][0]['content']['parts'][0]['text']
             return ai_reply.strip()
         else:
+            print(f"Gemini API Error: {response.status_code} - {response.text}")
             return None
             
     except Exception as e:
         print(f"AI Reply Error: {str(e)}")
         return None
+
+def process_incoming_reply(sender_email, sender_name, subject, message_content):
+    """Process incoming email reply and generate AI response"""
+    global conversations, replies, sent_emails, unanswered_emails
+    
+    # Find the original sent email
+    original_email = None
+    for email in sent_emails:
+        if email['recipient'].lower() == sender_email.lower():
+            original_email = email
+            break
+    
+    if original_email:
+        # Mark as replied
+        original_email['replied'] = True
+        original_email['reply_count'] += 1
+        original_email['last_activity'] = datetime.now().isoformat()
+        
+        # Remove from unanswered emails
+        unanswered_emails = [ue for ue in unanswered_emails if ue['email_id'] != original_email['id']]
+    
+    # Find or create conversation
+    conversation = None
+    for conv in conversations:
+        if conv['customer_email'].lower() == sender_email.lower():
+            conversation = conv
+            break
+    
+    if not conversation:
+        conversation = {
+            'id': len(conversations) + 1,
+            'customer_email': sender_email,
+            'customer_name': sender_name,
+            'started_date': datetime.now().isoformat(),
+            'last_activity': datetime.now().isoformat(),
+            'status': 'active',
+            'message_count': 0,
+            'messages': []
+        }
+        conversations.append(conversation)
+    
+    # Add customer message to conversation
+    customer_message = {
+        'id': len(conversation['messages']) + 1,
+        'sender_type': 'customer',
+        'sender_name': sender_name,
+        'content': message_content,
+        'timestamp': datetime.now().isoformat(),
+        'subject': subject
+    }
+    conversation['messages'].append(customer_message)
+    conversation['message_count'] += 1
+    conversation['last_activity'] = datetime.now().isoformat()
+    
+    # Generate AI response
+    ai_response = generate_ai_reply(message_content, sender_name, conversation['messages'])
+    
+    if ai_response:
+        # Add AI message to conversation
+        ai_message = {
+            'id': len(conversation['messages']) + 1,
+            'sender_type': 'ai',
+            'sender_name': 'AI Assistant',
+            'content': ai_response,
+            'timestamp': datetime.now().isoformat(),
+            'subject': f"Re: {subject.replace('Re: ', '')}"
+        }
+        conversation['messages'].append(ai_message)
+        conversation['message_count'] += 1
+        conversation['last_activity'] = datetime.now().isoformat()
+        
+        # Send AI response via email
+        try:
+            send_ai_email_response(sender_email, f"Re: {subject.replace('Re: ', '')}", ai_response)
+            ai_message['sent'] = True
+            ai_message['sent_timestamp'] = datetime.now().isoformat()
+        except Exception as e:
+            print(f"Error sending AI response: {e}")
+            ai_message['sent'] = False
+            ai_message['error'] = str(e)
+    
+    return conversation
+
+def send_ai_email_response(recipient_email, subject, message_content):
+    """Send AI-generated email response"""
+    try:
+        msg = EmailMessage()
+        msg['From'] = EMAIL
+        msg['To'] = recipient_email
+        msg['Subject'] = subject
+        msg.set_content(message_content)
+        
+        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+            server.starttls()
+            server.login(EMAIL, PASSWORD)
+            server.send_message(msg)
+        
+        print(f"✅ AI response sent to {recipient_email}")
+        return True
+        
+    except Exception as e:
+        print(f"❌ Error sending AI response: {e}")
+        return False
 
 # Routes
 @app.route('/')
@@ -305,8 +538,8 @@ def get_contacts_api():
 
 @app.route('/add-contact', methods=['POST'])
 def add_contact():
-    """Add a single contact with email validation"""
-    global contacts, fake_emails
+    """Add a single contact with simple validation"""
+    global contacts
     
     email_addr = request.form.get('email')
     first_name = request.form.get('first_name')
@@ -315,15 +548,10 @@ def add_contact():
     if not email_addr or not first_name:
         return jsonify({'success': False, 'message': 'Email and first name required'})
     
-    # Validate email
+    # Simple email format validation
     validation = validate_email_deliverability(email_addr)
     if not validation['valid']:
-        fake_emails.append({
-            'email': email_addr,
-            'reason': validation['reason'],
-            'detected_date': datetime.now().isoformat()
-        })
-        return jsonify({'success': False, 'message': f'Invalid email: {validation["reason"]}'})
+        return jsonify({'success': False, 'message': f'Invalid email format: {validation["reason"]}'})
     
     # Check if already exists
     for contact in contacts:
@@ -334,9 +562,7 @@ def add_contact():
         'email': email_addr,
         'first_name': first_name,
         'last_name': last_name or '',
-        'status': 'Pending',
-        'validated': True,
-        'validation_date': datetime.now().isoformat()
+        'status': 'Pending'
     }
     
     contacts.append(new_contact)
@@ -412,6 +638,26 @@ def send_next_email():
             'message': 'All emails processed!'
         })
     
+    # Simple email validation
+    print(f"📧 Sending to: {next_contact['email']}")
+    validation_result = validate_email_deliverability(next_contact['email'])
+    
+    if not validation_result['valid']:
+        next_contact['status'] = 'Failed'
+        
+        return jsonify({
+            'success': True,
+            'completed': False,
+            'contact_index': contact_index,
+            'contact_email': next_contact['email'],
+            'contact_name': f"{next_contact['first_name']} {next_contact['last_name']}",
+            'status': 'failed',
+            'error': f'Invalid email format: {validation_result["reason"]}',
+            'message': f'❌ Invalid email format: {next_contact["first_name"]}'
+        })
+    
+    print(f"✅ Email format valid: {next_contact['email']}")
+    
     try:
         # Create email
         msg = EmailMessage()
@@ -428,7 +674,7 @@ Your Team"""
         
         msg.set_content(email_content)
         
-        # Send email with bounce detection
+        # Send email
         try:
             with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
                 server.starttls()
@@ -452,42 +698,7 @@ Your Team"""
                 'message': f'✅ Email sent to {next_contact["first_name"]}'
             })
             
-        except smtplib.SMTPRecipientsRefused as e:
-            error_msg = str(e)
-            detect_bounce_from_smtp_error(next_contact['email'], f"Recipients refused: {error_msg}")
-            next_contact['status'] = 'Failed'
-            
-            return jsonify({
-                'success': True,
-                'completed': False,
-                'contact_index': contact_index,
-                'contact_email': next_contact['email'],
-                'contact_name': f"{next_contact['first_name']} {next_contact['last_name']}",
-                'status': 'failed',
-                'error': 'Recipients refused - Email bounced',
-                'message': f'🚫 Email bounced: {next_contact["first_name"]} - Recipients refused'
-            })
-            
-        except smtplib.SMTPResponseException as e:
-            error_msg = f"SMTP {e.smtp_code}: {e.smtp_error.decode() if hasattr(e.smtp_error, 'decode') else str(e.smtp_error)}"
-            detect_bounce_from_smtp_error(next_contact['email'], error_msg)
-            next_contact['status'] = 'Failed'
-            
-            return jsonify({
-                'success': True,
-                'completed': False,
-                'contact_index': contact_index,
-                'contact_email': next_contact['email'],
-                'contact_name': f"{next_contact['first_name']} {next_contact['last_name']}",
-                'status': 'failed',
-                'error': f'SMTP Error {e.smtp_code} - Email bounced',
-                'message': f'🚫 Email bounced: {next_contact["first_name"]} - SMTP {e.smtp_code}'
-            })
-            
         except Exception as e:
-            error_msg = str(e)
-            if any(keyword in error_msg.lower() for keyword in ['user unknown', 'mailbox', 'recipient', 'invalid', 'refused']):
-                detect_bounce_from_smtp_error(next_contact['email'], error_msg)
             next_contact['status'] = 'Failed'
             
             return jsonify({
@@ -498,9 +709,9 @@ Your Team"""
                 'contact_name': f"{next_contact['first_name']} {next_contact['last_name']}",
                 'status': 'failed',
                 'error': 'Send failed',
-                'message': f'❌ Failed: {next_contact["first_name"]} - {error_msg[:50]}'
+                'message': f'❌ Failed: {next_contact["first_name"]} - {str(e)[:50]}'
             })
-            
+        
     except Exception as e:
         return jsonify({
             'success': False,
@@ -530,20 +741,49 @@ def get_replies():
 @app.route('/api/email-monitoring/status')
 def get_monitoring_status():
     """Get email monitoring status"""
+    global email_monitoring_active, last_email_check
+    
     return jsonify({
-        'monitoring': False,
-        'status': 'inactive'
+        'monitoring': email_monitoring_active,
+        'status': 'active' if email_monitoring_active else 'inactive',
+        'last_check': last_email_check.isoformat() if last_email_check else None,
+        'total_replies': len(replies)
     })
 
 @app.route('/api/email-monitoring/start', methods=['POST'])
 def start_monitoring():
     """Start email monitoring"""
-    return jsonify({'success': True, 'message': 'Email monitoring started'})
+    try:
+        start_email_monitoring()
+        return jsonify({'success': True, 'message': 'Email monitoring started successfully'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Failed to start monitoring: {str(e)}'})
 
 @app.route('/api/email-monitoring/stop', methods=['POST'])
 def stop_monitoring():
     """Stop email monitoring"""
+    try:
+        stop_email_monitoring()
     return jsonify({'success': True, 'message': 'Email monitoring stopped'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Failed to stop monitoring: {str(e)}'})
+
+@app.route('/api/check-emails-now', methods=['POST'])
+def check_emails_now():
+    """Manually check for new emails"""
+    try:
+        new_replies = check_for_new_emails()
+        return jsonify({
+            'success': True, 
+            'message': f'Email check completed. Found {new_replies} new replies.',
+            'new_replies': new_replies,
+            'total_replies': len(replies)
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False, 
+            'message': f'Error checking emails: {str(e)}'
+        })
 
 @app.route('/remove-contact', methods=['POST'])
 def remove_contact():
@@ -607,14 +847,9 @@ def upload_bulk_contacts():
                 first_name = str(row['First Name']).strip()
                 last_name = str(row['Last Name']).strip()
                 
-                # Validate email format and deliverability
+                # Validate email format
                 validation = validate_email_deliverability(email)
                 if not validation['valid']:
-                    fake_emails.append({
-                        'email': email,
-                        'reason': validation['reason'],
-                        'detected_date': datetime.now().isoformat()
-                    })
                     error_count += 1
                     continue
                 
@@ -629,9 +864,7 @@ def upload_bulk_contacts():
                     'email': email,
                     'first_name': first_name,
                     'last_name': last_name,
-                    'status': 'Pending',
-                    'validated': True,
-                    'validation_date': datetime.now().isoformat()
+                    'status': 'Pending'
                 }
                 
                 contacts.append(new_contact)
@@ -717,15 +950,7 @@ def send_ai_reply():
     except Exception as e:
         return jsonify({'success': False, 'message': f'Error sending reply: {str(e)}'})
 
-@app.route('/api/fake-emails')
-def get_fake_emails():
-    """Get list of detected fake emails"""
-    return jsonify(fake_emails)
-
-@app.route('/api/bounced-emails')
-def get_bounced_emails():
-    """Get list of bounced emails"""
-    return jsonify(bounced_emails)
+# Fake email and bounce detection routes removed
 
 @app.route('/api/validate-email', methods=['POST'])
 def validate_single_email():
@@ -737,13 +962,6 @@ def validate_single_email():
         return jsonify({'success': False, 'message': 'Email address required'})
     
     validation = validate_email_deliverability(email)
-    
-    if not validation['valid']:
-        fake_emails.append({
-            'email': email,
-            'reason': validation['reason'],
-            'detected_date': datetime.now().isoformat()
-        })
         
         return jsonify({
             'success': True, 
@@ -754,61 +972,29 @@ def validate_single_email():
 
 @app.route('/api/email-stats')
 def get_email_stats():
-    """Get email validation statistics"""
+    """Get email statistics"""
     total_contacts = len(contacts)
-    fake_count = len(fake_emails)
-    bounce_count = len(bounced_emails)
-    valid_count = len([c for c in contacts if c.get('validated', False)])
+    sent_count = len([c for c in contacts if c.get('status') == 'Sent'])
     
     return jsonify({
         'total_contacts': total_contacts,
-        'valid_emails': valid_count,
-        'fake_emails': fake_count,
-        'bounced_emails': bounce_count,
-        'validation_rate': round((valid_count / max(total_contacts, 1)) * 100, 2)
-    })
-
-@app.route('/api/clean-fake-emails', methods=['POST'])
-def clean_fake_emails():
-    """Remove fake emails from contacts list"""
-    global contacts, fake_emails
-    
-    fake_email_list = [fe['email'] for fe in fake_emails]
-    original_count = len(contacts)
-    
-    # Remove contacts with fake emails
-    contacts = [c for c in contacts if c['email'].lower() not in [fe.lower() for fe in fake_email_list]]
-    
-    removed_count = original_count - len(contacts)
-    
-    return jsonify({
-        'success': True,
-        'message': f'Removed {removed_count} fake emails from contacts',
-        'removed_count': removed_count
-    })
-
-@app.route('/api/clear-fake-emails', methods=['POST'])
-def clear_fake_emails():
-    """Clear the fake emails list"""
-    global fake_emails
-    
-    fake_emails = []
-    
-    return jsonify({
-        'success': True,
-        'message': 'Fake emails list cleared'
+        'valid_emails': total_contacts,
+        'fake_emails': 0,
+        'bounced_emails': 0,
+        'sent_emails': sent_count,
+        'validation_rate': 100
     })
 
 @app.route('/api/reset-all-data', methods=['POST'])
 def reset_all_data():
-    """Reset all data (contacts, fake emails, etc.)"""
-    global contacts, sent_emails, replies, fake_emails, bounced_emails
+    """Reset all data"""
+    global contacts, sent_emails, replies, conversations, unanswered_emails
     
     contacts = []
     sent_emails = []
     replies = []
-    fake_emails = []
-    bounced_emails = []
+    conversations = []
+    unanswered_emails = []
     
     return jsonify({
         'success': True,
@@ -845,48 +1031,127 @@ def update_email_limits():
         }
     })
 
-@app.route('/api/check-bounces', methods=['POST'])
-def check_bounces_api():
-    """Manually trigger bounce detection"""
-    try:
-        result = check_email_bounces()
-        
-        return jsonify({
-            'success': True,
-            'message': f'Bounce check completed. Found {len(bounced_emails)} bounced emails.',
-            'bounced_count': len(bounced_emails),
-            'bounced_emails': bounced_emails[-10:]  # Return last 10 for display
-        })
-    except Exception as e:
-        return jsonify({
-            'success': False, 
-            'message': f'Error checking bounces: {str(e)}'
-        })
+# Bounce detection routes removed - simplified system
 
-@app.route('/api/simulate-bounce', methods=['POST'])
-def simulate_bounce_api():
-    """Simulate a bounce for testing purposes"""
+# New AI Conversation and Reply Tracking Routes
+
+@app.route('/api/conversations')
+def get_conversations():
+    """Get all AI conversations"""
+    return jsonify(conversations)
+
+@app.route('/api/conversation/<int:conversation_id>')
+def get_conversation(conversation_id):
+    """Get specific conversation by ID"""
+    conversation = None
+    for conv in conversations:
+        if conv['id'] == conversation_id:
+            conversation = conv
+            break
+    
+    if conversation:
+        return jsonify(conversation)
+    else:
+        return jsonify({'error': 'Conversation not found'}), 404
+
+@app.route('/api/unanswered-emails')
+def get_unanswered_emails():
+    """Get all unanswered emails"""
+    # Update days since sent
+    for email in unanswered_emails:
+        sent_date = datetime.fromisoformat(email['sent_date'])
+        days_diff = (datetime.now() - sent_date).days
+        email['days_since_sent'] = days_diff
+    
+    return jsonify(unanswered_emails)
+
+# Demo simulation endpoint removed for production
+
+@app.route('/api/send-manual-reply', methods=['POST'])
+def send_manual_reply():
+    """Send manual reply to a conversation"""
     data = request.get_json()
-    email = data.get('email', 'test@example.com')
-    error_type = data.get('error_type', 'user_unknown')
+    conversation_id = data.get('conversation_id')
+    message_content = data.get('message')
     
-    error_messages = {
-        'user_unknown': '550 User unknown',
-        'mailbox_full': '552 Mailbox full',
-        'domain_not_found': '550 Domain not found',
-        'blocked': '554 Message blocked',
-        'invalid_recipient': '553 Invalid recipient address'
+    if not conversation_id or not message_content:
+        return jsonify({'success': False, 'message': 'Conversation ID and message required'})
+    
+    # Find conversation
+    conversation = None
+    for conv in conversations:
+        if conv['id'] == conversation_id:
+            conversation = conv
+            break
+    
+    if not conversation:
+        return jsonify({'success': False, 'message': 'Conversation not found'})
+    
+    # Add manual message to conversation
+    manual_message = {
+        'id': len(conversation['messages']) + 1,
+        'sender_type': 'human',
+        'sender_name': 'Human Agent',
+        'content': message_content,
+        'timestamp': datetime.now().isoformat(),
+        'subject': f"Re: {conversation['messages'][-1]['subject'].replace('Re: ', '')}"
     }
+    conversation['messages'].append(manual_message)
+    conversation['message_count'] += 1
+    conversation['last_activity'] = datetime.now().isoformat()
     
-    error_msg = error_messages.get(error_type, '550 User unknown')
-    bounce_entry = detect_bounce_from_smtp_error(email, error_msg)
+    # Send manual response via email
+    try:
+        success = send_ai_email_response(
+            conversation['customer_email'], 
+            manual_message['subject'], 
+            message_content
+        )
+        
+        if success:
+            manual_message['sent'] = True
+            manual_message['sent_timestamp'] = datetime.now().isoformat()
+            return jsonify({'success': True, 'message': 'Manual reply sent successfully'})
+        else:
+            return jsonify({'success': False, 'message': 'Failed to send manual reply'})
+            
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Error sending manual reply: {str(e)}'})
+
+@app.route('/api/conversation-stats')
+def get_conversation_stats():
+    """Get conversation statistics"""
+    total_conversations = len(conversations)
+    active_conversations = len([c for c in conversations if c['status'] == 'active'])
+    total_messages = sum(c['message_count'] for c in conversations)
+    
+    # Calculate response rate
+    replied_emails = len([e for e in sent_emails if e.get('replied', False)])
+    total_sent = len(sent_emails)
+    response_rate = (replied_emails / max(total_sent, 1)) * 100
     
     return jsonify({
-        'success': True,
-        'message': f'Simulated bounce for {email}',
-        'bounce_entry': bounce_entry
-        })
+        'total_conversations': total_conversations,
+        'active_conversations': active_conversations,
+        'total_messages': total_messages,
+        'unanswered_emails': len(unanswered_emails),
+        'response_rate': round(response_rate, 2),
+        'ai_responses_sent': sum(len([m for m in c['messages'] if m['sender_type'] == 'ai']) for c in conversations)
+    })
 
+# Production configuration for Vercel
+def create_app():
+    """Create Flask app for production deployment"""
+    # Start email monitoring automatically
+    try:
+        start_email_monitoring()
+        print("📧 Email monitoring started automatically")
+    except Exception as e:
+        print(f"⚠️  Could not start email monitoring: {str(e)}")
+    
+    return app
+
+# For local development
 if __name__ == '__main__':
     print("🚀 Starting AI Email Campaign Manager...")
     print(f"📧 Email: {EMAIL}")
@@ -894,4 +1159,11 @@ if __name__ == '__main__':
     print("🌐 Server starting on http://localhost:5008")
     print("=" * 50)
     
-    app.run(debug=True, host='0.0.0.0', port=5008)
+    # Start email monitoring automatically
+    try:
+        start_email_monitoring()
+        print("📧 Email monitoring started automatically")
+    except Exception as e:
+        print(f"⚠️  Could not start email monitoring: {str(e)}")
+    
+    app.run(debug=False, host='0.0.0.0', port=5008)

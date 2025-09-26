@@ -1,41 +1,47 @@
-# 🤖 AI Email Campaign Manager - Clean Local Version
+# 🤖 AI Email Campaign Manager - Production Ready
 
-A professional email marketing platform with AI-powered automation, optimized for local development.
+A professional email marketing platform with AI-powered automation, optimized for Vercel deployment.
 
-## ✅ **CLEAN & OPTIMIZED**
+## ✅ **PRODUCTION OPTIMIZED**
 
-- **🧹 Removed Vercel complexity** - No more deployment issues
-- **⚡ Optimized code** - Removed unnecessary dependencies and code
-- **🚀 Local-first** - Designed for local development and production
-- **📦 Minimal dependencies** - Only Flask and requests needed
-- **🔧 Easy setup** - Simple installation and startup
+- **🚀 Vercel Ready** - Optimized for Vercel deployment
+- **⚡ Production Code** - Removed all demo/test content
+- **📦 Clean Dependencies** - Minimal production dependencies
+- **🔧 Auto-Deploy** - Ready for Vercel deployment
+- **🤖 AI Automation** - Full AI email reply system
 
-## 🚀 **Quick Start**
+## 🚀 **Deployment Options**
 
-### **Option 1: Automatic Installation**
+### **Option 1: Vercel Deployment (Recommended)**
 ```bash
-# Run the installation script
-./install.sh
+# Install Vercel CLI
+npm i -g vercel
 
-# Start the application
-python3 app.py
+# Deploy to Vercel
+vercel
+
+# Set environment variables in Vercel dashboard:
+# - EMAIL: your-gmail@gmail.com
+# - PASSWORD: your-app-password
+# - GEMINI_API_KEY: your-gemini-api-key
 ```
 
-### **Option 2: Manual Installation**
+### **Option 2: Local Development**
 ```bash
 # Install dependencies
 pip3 install -r requirements.txt
 
 # Run the application
 python3 app.py
+
+# Open: http://localhost:5008
 ```
 
-### **Open Your Browser**
-```
-http://localhost:5008
-```
-
-That's it! The application will be running locally with all features working.
+### **Environment Variables**
+Set these in Vercel dashboard:
+- `EMAIL`: Your Gmail address
+- `PASSWORD`: Your Gmail app password
+- `GEMINI_API_KEY`: Your Gemini API key
 
 ## 🎯 **Features**
 

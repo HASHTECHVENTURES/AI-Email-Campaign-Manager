@@ -1,0 +1,9 @@
+Email,First Name,Last Name
+test@fake.com,Test,Fake
+invalid@bounce.test,Invalid,Bounce
+real.user@gmail.com,Real,User
+fake@disposable.email,Fake,Disposable
+noreply@invalid.email,No,Reply
+john.doe@example.com,John,Doe
+bounce@notreal.domain,Bounce,Domain
+spam@blocked.test,Spam,Blocked

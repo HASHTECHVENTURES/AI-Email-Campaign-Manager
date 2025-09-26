@@ -271,67 +271,88 @@
         
         /* Email Sending Progress Styles */
         .email-progress {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            border-radius: 15px;
-            padding: 20px;
+            background: white;
+            color: var(--dark);
+            border-radius: var(--border-radius);
+            padding: 30px;
             margin: 20px 0;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            box-shadow: var(--shadow-lg);
+            border: 1px solid #e5e7eb;
         }
         
         .progress-container {
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 10px;
-            padding: 15px;
-            margin: 15px 0;
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            border: 1px solid #e5e7eb;
         }
         
         .email-item {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
-            padding: 10px;
-            margin: 5px 0;
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin: 8px 0;
             display: flex;
             align-items: center;
             justify-content: space-between;
             transition: all 0.3s ease;
+            border: 2px solid #e5e7eb;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        
+        .email-item.pending {
+            border-left: 4px solid #6b7280;
+            background: #f9fafb;
         }
         
         .email-item.sending {
-            background: rgba(255, 193, 7, 0.2);
-            border-left: 4px solid #ffc107;
+            background: #fef3c7;
+            border-left: 4px solid var(--warning);
+            color: #92400e;
         }
         
         .email-item.sent {
-            background: rgba(40, 167, 69, 0.2);
-            border-left: 4px solid #28a745;
+            background: #ecfdf5;
+            border-left: 4px solid var(--success);
+            color: #065f46;
         }
         
         .email-item.failed {
-            background: rgba(220, 53, 69, 0.2);
-            border-left: 4px solid #dc3545;
+            background: #fef2f2;
+            border-left: 4px solid var(--danger);
+            color: #991b1b;
         }
         
         .email-status {
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 0.8em;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
             font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .status-pending {
+            background: #f3f4f6;
+            color: #374151;
+            border: 1px solid #d1d5db;
         }
         
         .status-sending {
-            background: #ffc107;
-            color: #000;
+            background: var(--warning);
+            color: white;
+            animation: pulse 1.5s infinite;
         }
         
         .status-sent {
-            background: #28a745;
-            color: #fff;
+            background: var(--success);
+            color: white;
         }
         
         .status-failed {
-            background: #dc3545;
-            color: #fff;
+            background: var(--danger);
+            color: white;
         }
         
         .pulse {
@@ -467,12 +488,6 @@
                     </div>
                 </div>
                 <div class="col-md-2">
-                    <div class="stats-card fade-in" style="animation-delay: 0.5s">
-                        <h3 id="bounced-emails">0</h3>
-                        <p class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Bounced Emails</p>
-                    </div>
-                </div>
-                <div class="col-md-2">
                     <div class="stats-card fade-in" style="animation-delay: 0.6s">
                         <h3 id="campaign-status">Ready</h3>
                         <p class="mb-0"><i class="fas fa-rocket me-2"></i>Campaign Status</p>
@@ -483,27 +498,27 @@
             <!-- Email Limits Row -->
             <div class="row mb-4">
                 <div class="col-md-3">
-                    <div class="stats-card bg-info text-white">
-                        <h3 id="daily-remaining">100</h3>
-                        <p class="mb-0">Daily Limit</p>
+                    <div class="stats-card" style="background: linear-gradient(135deg, #06b6d4, #0891b2); color: white; border: 2px solid #0891b2;">
+                        <h3 id="daily-remaining" style="color: white; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">100</h3>
+                        <p class="mb-0" style="color: white; font-weight: 600; text-shadow: 0 1px 2px rgba(0,0,0,0.3);">Daily Limit</p>
                     </div>
                 </div>
                 <div class="col-md-3">
-                    <div class="stats-card bg-warning text-white">
-                        <h3 id="hourly-remaining">20</h3>
-                        <p class="mb-0">Hourly Limit</p>
+                    <div class="stats-card" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white; border: 2px solid #d97706;">
+                        <h3 id="hourly-remaining" style="color: white; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">20</h3>
+                        <p class="mb-0" style="color: white; font-weight: 600; text-shadow: 0 1px 2px rgba(0,0,0,0.3);">Hourly Limit</p>
                     </div>
                 </div>
                 <div class="col-md-3">
-                    <div class="stats-card bg-success text-white">
-                        <h3 id="daily-sent">0</h3>
-                        <p class="mb-0">Sent Today</p>
+                    <div class="stats-card" style="background: linear-gradient(135deg, #10b981, #059669); color: white; border: 2px solid #059669;">
+                        <h3 id="daily-sent" style="color: white; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">0</h3>
+                        <p class="mb-0" style="color: white; font-weight: 600; text-shadow: 0 1px 2px rgba(0,0,0,0.3);">Sent Today</p>
                     </div>
                 </div>
                 <div class="col-md-3">
-                    <div class="stats-card bg-primary text-white">
-                        <h3 id="hourly-sent">0</h3>
-                        <p class="mb-0">Sent This Hour</p>
+                    <div class="stats-card" style="background: linear-gradient(135deg, #4f46e5, #3730a3); color: white; border: 2px solid #3730a3;">
+                        <h3 id="hourly-sent" style="color: white; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">0</h3>
+                        <p class="mb-0" style="color: white; font-weight: 600; text-shadow: 0 1px 2px rgba(0,0,0,0.3);">Sent This Hour</p>
                     </div>
                 </div>
             </div>
@@ -521,13 +536,18 @@
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="validation-tab" data-bs-toggle="tab" data-bs-target="#validation" type="button" role="tab">
-                        <i class="fas fa-shield-alt me-2"></i>Email Validation
+                    <button class="nav-link" id="limits-tab" data-bs-toggle="tab" data-bs-target="#limits" type="button" role="tab">
+                        <i class="fas fa-tachometer-alt me-2"></i>Email Limits
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="limits-tab" data-bs-toggle="tab" data-bs-target="#limits" type="button" role="tab">
-                        <i class="fas fa-tachometer-alt me-2"></i>Email Limits
+                    <button class="nav-link" id="conversations-tab" data-bs-toggle="tab" data-bs-target="#conversations" type="button" role="tab">
+                        <i class="fas fa-comments me-2"></i>AI Conversations
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="unanswered-tab" data-bs-toggle="tab" data-bs-target="#unanswered" type="button" role="tab">
+                        <i class="fas fa-clock me-2"></i>Unanswered Emails
                     </button>
                 </li>
             </ul>
@@ -621,8 +641,8 @@
                         
                         <div class="progress-container">
                             <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span>Overall Progress</span>
-                                <span id="overallProgress">0/0</span>
+                                <span style="color: var(--dark); font-weight: 600; font-size: 1.1em;">Overall Progress</span>
+                                <span id="overallProgress" style="color: var(--dark); font-weight: 600; font-size: 1.1em;">0/0</span>
                             </div>
                             <div class="progress mb-3" style="height: 8px;">
                                 <div id="progressBar" class="progress-bar bg-success" role="progressbar" style="width: 0%"></div>
@@ -655,9 +675,9 @@
                         </div>
                         
                         <!-- Campaign Results Summary -->
-                        <div class="mt-4 p-3 bg-light rounded">
-                            <h6 class="fw-bold mb-3">
-                                <i class="fas fa-chart-pie me-2"></i>Campaign Results Summary
+                        <div class="mt-4 p-4 rounded" style="background: white; border: 1px solid #e5e7eb; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);">
+                            <h6 class="fw-bold mb-3" style="color: var(--dark); font-size: 1.2em;">
+                                <i class="fas fa-chart-pie me-2" style="color: var(--primary);"></i>Campaign Results Summary
                             </h6>
                             <div class="row">
                                 <div class="col-md-3">
@@ -846,6 +866,132 @@ Your Team</textarea>
                 </div>
             </div>
 
+            <!-- AI Conversations Tab -->
+            <div class="tab-pane fade" id="conversations" role="tabpanel">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="section-card">
+                            <h4 class="fw-bold mb-3">
+                                <i class="fas fa-chart-bar me-2"></i>Conversation Stats
+                            </h4>
+                            <div id="conversationStats">
+                                <div class="row text-center">
+                                    <div class="col-6">
+                                        <h5 id="totalConversations">0</h5>
+                                        <small>Total Conversations</small>
+                                    </div>
+                                    <div class="col-6">
+                                        <h5 id="activeConversations">0</h5>
+                                        <small>Active Conversations</small>
+                                    </div>
+                                </div>
+                                <div class="row text-center mt-3">
+                                    <div class="col-6">
+                                        <h5 id="aiResponsesSent">0</h5>
+                                        <small>AI Responses</small>
+                                    </div>
+                                    <div class="col-6">
+                                        <h5 id="responseRate">0%</h5>
+                                        <small>Response Rate</small>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-4">
+                                <h6 class="fw-bold">Automatic Email Monitoring</h6>
+                                <div class="mb-2">
+                                    <span id="monitoring-status" class="badge bg-success">
+                                        <i class="fas fa-circle me-1"></i>Active
+                                    </span>
+                                    <small class="text-muted d-block mt-1" id="last-check">
+                                        Last check: Never
+                                    </small>
+                                </div>
+                                <small class="text-muted">✅ Email monitoring runs automatically every 30 seconds. No manual intervention needed!</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-8">
+                        <div class="section-card">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h4 class="fw-bold mb-0">
+                                    <i class="fas fa-comments me-2"></i>Active Conversations
+                                </h4>
+                                <button class="btn btn-primary btn-sm" onclick="loadConversations()">
+                                    <i class="fas fa-sync me-1"></i>Refresh
+                                </button>
+                            </div>
+                            <div id="conversationsList">
+                                <div class="text-center text-muted py-4">
+                                    <i class="fas fa-comments fa-3x mb-3"></i>
+                                    <p>No conversations yet. Send some emails and wait for replies!</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Conversation Detail Modal -->
+                <div class="modal fade" id="conversationModal" tabindex="-1">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">
+                                    <i class="fas fa-user me-2"></i>
+                                    <span id="modalCustomerName">Customer Conversation</span>
+                                </h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div id="conversationMessages" style="max-height: 400px; overflow-y: auto;">
+                                    <!-- Messages will be loaded here -->
+                                </div>
+                                
+                                <!-- Manual Reply Section -->
+                                <div class="mt-4 p-3 bg-light rounded">
+                                    <h6 class="fw-bold">Send Manual Reply</h6>
+                                    <textarea id="manualReplyText" class="form-control mb-2" rows="3" placeholder="Type your manual reply here..."></textarea>
+                                    <button class="btn btn-success" onclick="sendManualReply()">
+                                        <i class="fas fa-paper-plane me-1"></i>Send Manual Reply
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Unanswered Emails Tab -->
+            <div class="tab-pane fade" id="unanswered" role="tabpanel">
+                <div class="section-card">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h4 class="fw-bold mb-0">
+                            <i class="fas fa-clock me-2"></i>Unanswered Emails
+                        </h4>
+                        <div>
+                            <button class="btn btn-warning btn-sm me-2" onclick="loadUnansweredEmails()">
+                                <i class="fas fa-sync me-1"></i>Refresh
+                            </button>
+                            <span class="badge bg-danger" id="unansweredCount">0</span>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Email Validation System:</strong> Emails that receive replies are automatically marked as valid. 
+                        Emails listed here have not received replies yet and may need follow-up or could be invalid addresses.
+                    </div>
+                    
+                    <div id="unansweredEmailsList">
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-clock fa-3x mb-3"></i>
+                            <p>All emails have been answered! Great job!</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Alerts -->
             <div id="alertContainer"></div>
         </div>
@@ -864,7 +1010,8 @@ Your Team</textarea>
             loadCampaignStatus();
             loadMonitoringStatus();
             loadEmailLimits();
-            loadBouncedEmails();
+            loadConversations();
+            loadUnansweredEmails();
             setupEventListeners();
             
             // Auto-start monitoring when page loads
@@ -872,10 +1019,7 @@ Your Team</textarea>
                 startEmailMonitoring();
             }, 2000); // Start after 2 seconds
             
-            // Auto-check bounces every 5 minutes
-            setInterval(() => {
-                checkBounces();
-            }, 300000); // 5 minutes = 300,000 milliseconds
+            // Simplified system - no bounce checking needed
             
         
         // LIVE CONTINUOUS EMAIL MONITORING
@@ -1314,9 +1458,19 @@ Your Team</textarea>
                 if (result.success) {
                     showAlert(`✅ ${result.message}`, 'success');
                     fileInput.value = ''; // Clear file input
+                    
+                    // Force refresh all contact-related data
+                    console.log('🔄 Refreshing contacts after bulk upload...');
                     await loadContacts();
                     await loadCampaignStatus();
-                    updateStats(); // Force update stats after upload
+                    updateStats();
+                    
+                    // Additional refresh with delay to ensure backend is updated
+                    setTimeout(async () => {
+                        console.log('🔄 Secondary refresh...');
+                        await loadContacts();
+                        updateStats();
+                    }, 1000);
                 } else {
                     showAlert(`❌ ${result.message}`, 'danger');
                 }
@@ -1536,7 +1690,6 @@ Your Team</textarea>
             // Final update
             await loadContacts();
             await loadEmailStats();
-            await loadBouncedEmails();
             
             showAlert(`📊 Campaign finished! Sent: ${emailProgress.sent}, Failed: ${emailProgress.failed}`, 'info');
         }
@@ -1646,18 +1799,25 @@ Your Team</textarea>
             
             // Check if elements exist before trying to update them
             if (statusElement) {
-                statusElement.textContent = 'Always Active';
-                statusElement.className = 'badge bg-success';
+                if (status.monitoring) {
+                    statusElement.innerHTML = '<i class="fas fa-circle me-1"></i>Active';
+                    statusElement.className = 'badge bg-success';
+                } else {
+                    statusElement.innerHTML = '<i class="fas fa-circle me-1"></i>Inactive';
+                    statusElement.className = 'badge bg-danger';
+                }
             }
             
             if (lastCheckElement) {
                 if (status.last_check) {
-                    lastCheckElement.textContent = new Date(status.last_check).toLocaleString();
+                    lastCheckElement.textContent = `Last check: ${new Date(status.last_check).toLocaleString()}`;
                 } else {
-                    lastCheckElement.textContent = 'Auto-checking every 30 seconds';
+                    lastCheckElement.textContent = 'Last check: Never';
                 }
             }
         }
+        
+        // Manual email checking removed - system is fully automatic
 
 
 
@@ -1812,7 +1972,7 @@ Your Team</textarea>
             const deliveryRateSummary = document.getElementById('deliveryRateSummary');
             
             if (totalSentSummary) totalSentSummary.textContent = emailProgress.sent;
-            if (totalBouncedSummary) totalBouncedSummary.textContent = bounced_emails ? bounced_emails.length : 0;
+            if (totalBouncedSummary) totalBouncedSummary.textContent = 0; // Will be updated by loadEmailStats()
             if (totalFailedSummary) totalFailedSummary.textContent = emailProgress.failed;
             if (deliveryRateSummary) deliveryRateSummary.textContent = `${deliveryRate}%`;
         }
@@ -2013,94 +2173,296 @@ Your Team</textarea>
             }
         }
 
-        // Bounce Detection Functions
-        async function checkBounces() {
+        // Bounce detection removed - simplified system
+
+        // ==================== AI CONVERSATION FUNCTIONS ====================
+        
+        let currentConversationId = null;
+        
+        async function loadConversations() {
             try {
-                showAlert('Checking for bounced emails...', 'info');
+                const response = await fetch('/api/conversations');
+                const conversations = await response.json();
                 
-                const response = await fetch('/api/check-bounces', {
-                    method: 'POST'
-                });
+                updateConversationsDisplay(conversations);
+                await loadConversationStats();
                 
-                const result = await response.json();
-                
-                if (result.success) {
-                    showAlert(`✅ ${result.message}`, 'success');
-                    await loadEmailStats();
-                    await loadBouncedEmails();
-                } else {
-                    showAlert(result.message, 'danger');
-                }
             } catch (error) {
-                showAlert('Error checking bounces', 'danger');
+                console.error('Error loading conversations:', error);
             }
         }
-
-        async function simulateBounce() {
-            const email = prompt('Enter email to simulate bounce (or leave empty for test@example.com):') || 'test@example.com';
-            const errorTypes = ['user_unknown', 'mailbox_full', 'domain_not_found', 'blocked', 'invalid_recipient'];
-            const errorType = errorTypes[Math.floor(Math.random() * errorTypes.length)];
+        
+        async function loadConversationStats() {
+            try {
+                const response = await fetch('/api/conversation-stats');
+                const stats = await response.json();
+                
+                document.getElementById('totalConversations').textContent = stats.total_conversations;
+                document.getElementById('activeConversations').textContent = stats.active_conversations;
+                document.getElementById('aiResponsesSent').textContent = stats.ai_responses_sent;
+                document.getElementById('responseRate').textContent = stats.response_rate + '%';
+                
+            } catch (error) {
+                console.error('Error loading conversation stats:', error);
+            }
+        }
+        
+        function updateConversationsDisplay(conversations) {
+            const container = document.getElementById('conversationsList');
+            
+            if (conversations.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-comments fa-3x mb-3"></i>
+                        <p>No conversations yet. Send some emails and wait for replies!</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = '';
+            conversations.forEach(conversation => {
+                const lastActivity = new Date(conversation.last_activity);
+                const timeAgo = getTimeAgo(lastActivity);
+                
+                html += `
+                    <div class="contact-item">
+                        <div class="row align-items-center">
+                            <div class="col-md-6">
+                                <h6 class="mb-1">
+                                    <i class="fas fa-user me-2"></i>
+                                    ${conversation.customer_name}
+                                </h6>
+                                <small class="text-muted">${conversation.customer_email}</small>
+                            </div>
+                            <div class="col-md-3">
+                                <span class="badge bg-primary">${conversation.message_count} messages</span>
+                                <br>
+                                <small class="text-muted">${timeAgo}</small>
+                            </div>
+                            <div class="col-md-3 text-end">
+                                <button class="btn btn-sm btn-outline-primary me-1" onclick="viewConversation(${conversation.id})">
+                                    <i class="fas fa-eye"></i> View
+                                </button>
+                                <span class="badge ${conversation.status === 'active' ? 'bg-success' : 'bg-secondary'}">${conversation.status}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+        
+        async function viewConversation(conversationId) {
+            try {
+                const response = await fetch(`/api/conversation/${conversationId}`);
+                const conversation = await response.json();
+                
+                if (conversation.error) {
+                    showAlert('Conversation not found', 'danger');
+                    return;
+                }
+                
+                currentConversationId = conversationId;
+                
+                // Update modal title
+                document.getElementById('modalCustomerName').textContent = 
+                    `${conversation.customer_name} (${conversation.customer_email})`;
+                
+                // Display messages
+                const messagesContainer = document.getElementById('conversationMessages');
+                let messagesHtml = '';
+                
+                conversation.messages.forEach(message => {
+                    const isCustomer = message.sender_type === 'customer';
+                    const isAI = message.sender_type === 'ai';
+                    const isHuman = message.sender_type === 'human';
+                    
+                    let senderIcon = '';
+                    let senderClass = '';
+                    
+                    if (isCustomer) {
+                        senderIcon = '<i class="fas fa-user text-primary"></i>';
+                        senderClass = 'bg-light';
+                    } else if (isAI) {
+                        senderIcon = '<i class="fas fa-robot text-success"></i>';
+                        senderClass = 'bg-success bg-opacity-10';
+                    } else if (isHuman) {
+                        senderIcon = '<i class="fas fa-user-tie text-warning"></i>';
+                        senderClass = 'bg-warning bg-opacity-10';
+                    }
+                    
+                    const timestamp = new Date(message.timestamp).toLocaleString();
+                    
+                    messagesHtml += `
+                        <div class="message-item p-3 mb-3 rounded ${senderClass}">
+                            <div class="d-flex align-items-start">
+                                <div class="me-3">
+                                    ${senderIcon}
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <strong>${message.sender_name}</strong>
+                                        <small class="text-muted">${timestamp}</small>
+                                    </div>
+                                    <div class="message-content">
+                                        ${message.content.replace(/\n/g, '<br>')}
+                                    </div>
+                                    ${message.sent === false ? '<div class="text-danger small mt-1"><i class="fas fa-exclamation-triangle"></i> Failed to send</div>' : ''}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                messagesContainer.innerHTML = messagesHtml;
+                
+                // Clear manual reply text
+                document.getElementById('manualReplyText').value = '';
+                
+                // Show modal
+                const modal = new bootstrap.Modal(document.getElementById('conversationModal'));
+                modal.show();
+                
+            } catch (error) {
+                console.error('Error viewing conversation:', error);
+                showAlert('Error loading conversation', 'danger');
+            }
+        }
+        
+        async function sendManualReply() {
+            if (!currentConversationId) {
+                showAlert('No conversation selected', 'danger');
+                return;
+            }
+            
+            const message = document.getElementById('manualReplyText').value.trim();
+            if (!message) {
+                showAlert('Please enter a message', 'warning');
+                return;
+            }
             
             try {
-                const response = await fetch('/api/simulate-bounce', {
+                const response = await fetch('/api/send-manual-reply', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        email: email,
-                        error_type: errorType
+                        conversation_id: currentConversationId,
+                        message: message
                     })
                 });
                 
                 const result = await response.json();
                 
                 if (result.success) {
-                    showAlert(`🚫 ${result.message}`, 'warning');
-                    await loadEmailStats();
-                    await loadBouncedEmails();
+                    showAlert('Manual reply sent successfully!', 'success');
+                    document.getElementById('manualReplyText').value = '';
+                    
+                    // Refresh the conversation view
+                    setTimeout(() => {
+                        viewConversation(currentConversationId);
+                    }, 1000);
                 } else {
                     showAlert(result.message, 'danger');
                 }
-            } catch (error) {
-                showAlert('Error simulating bounce', 'danger');
-            }
-        }
-
-        async function loadBouncedEmails() {
-            try {
-                const response = await fetch('/api/bounced-emails');
-                const bouncedEmails = await response.json();
                 
-                const bouncedEmailsList = document.getElementById('bouncedEmailsList');
-                if (bouncedEmailsList) {
-                    if (bouncedEmails.length === 0) {
-                        bouncedEmailsList.innerHTML = `
-                            <div class="text-center text-muted">
-                                <i class="fas fa-check-circle fa-2x mb-2 text-success"></i>
-                                <p>No bounced emails detected</p>
-                            </div>
-                        `;
-                    } else {
-                        bouncedEmailsList.innerHTML = bouncedEmails.map(bounce => `
-                            <div class="d-flex justify-content-between align-items-center p-2 border-bottom">
-                                <div>
-                                    <strong>${bounce.email}</strong>
-                                    <br>
-                                    <small class="text-danger">${bounce.reason}</small>
-                                    <br>
-                                    <small class="text-muted">${new Date(bounce.timestamp).toLocaleString()}</small>
-                                </div>
-                                <span class="badge ${bounce.bounce_type === 'hard' ? 'bg-danger' : 'bg-warning'}">${bounce.bounce_type}</span>
-                            </div>
-                        `).join('');
-                    }
-                }
             } catch (error) {
-                console.error('Error loading bounced emails:', error);
+                console.error('Error sending manual reply:', error);
+                showAlert('Error sending manual reply', 'danger');
             }
         }
+        
+        // Demo simulation function removed for production
+        
+        async function loadUnansweredEmails() {
+            try {
+                const response = await fetch('/api/unanswered-emails');
+                const unansweredEmails = await response.json();
+                
+                updateUnansweredEmailsDisplay(unansweredEmails);
+                document.getElementById('unansweredCount').textContent = unansweredEmails.length;
+                
+            } catch (error) {
+                console.error('Error loading unanswered emails:', error);
+            }
+        }
+        
+        function updateUnansweredEmailsDisplay(unansweredEmails) {
+            const container = document.getElementById('unansweredEmailsList');
+            
+            if (unansweredEmails.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-check-circle fa-3x mb-3 text-success"></i>
+                        <p>All emails have been answered! Great job!</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = '';
+            unansweredEmails.forEach(email => {
+                const daysBadgeClass = email.days_since_sent > 7 ? 'bg-danger' : 
+                                     email.days_since_sent > 3 ? 'bg-warning' : 'bg-info';
+                
+                html += `
+                    <div class="contact-item">
+                        <div class="row align-items-center">
+                            <div class="col-md-6">
+                                <h6 class="mb-1">
+                                    <i class="fas fa-envelope me-2"></i>
+                                    ${email.recipient}
+                                </h6>
+                                <small class="text-muted">${email.subject}</small>
+                            </div>
+                            <div class="col-md-3">
+                                <span class="badge ${daysBadgeClass}">${email.days_since_sent} days ago</span>
+                                <br>
+                                <small class="text-muted">${new Date(email.sent_date).toLocaleDateString()}</small>
+                            </div>
+                            <div class="col-md-3 text-end">
+                                <button class="btn btn-sm btn-outline-warning" onclick="followUpEmail('${email.recipient}')">
+                                    <i class="fas fa-paper-plane"></i> Follow Up
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+        
+        async function followUpEmail(recipient) {
+            // This could be enhanced to send a follow-up email
+            showAlert(`Follow-up feature for ${recipient} - Coming soon!`, 'info');
+        }
+        
+        function getTimeAgo(date) {
+            const now = new Date();
+            const diff = now - date;
+            const minutes = Math.floor(diff / 60000);
+            const hours = Math.floor(diff / 3600000);
+            const days = Math.floor(diff / 86400000);
+            
+            if (days > 0) return `${days} day${days > 1 ? 's' : ''} ago`;
+            if (hours > 0) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+            if (minutes > 0) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+            return 'Just now';
+        }
+        
+        // Auto-refresh conversations, unanswered emails, and monitoring status every 10 seconds
+        setInterval(() => {
+            loadConversationStats();
+            loadUnansweredEmails();
+            loadConversations();
+            loadMonitoringStatus();
+        }, 10000);
 
     </script>
 </body>
+</html>
 </html>
