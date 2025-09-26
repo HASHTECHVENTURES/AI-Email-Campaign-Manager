@@ -74,7 +74,10 @@ DEFAULT_EMAIL_ACCOUNT = 'primary'
 EMAIL = EMAIL_ACCOUNTS[DEFAULT_EMAIL_ACCOUNT]['email']
 PASSWORD = EMAIL_ACCOUNTS[DEFAULT_EMAIL_ACCOUNT]['password']
 SMTP_SERVER = EMAIL_ACCOUNTS[DEFAULT_EMAIL_ACCOUNT]['smtp_server']
-SMTP_PORT = 587
+SMTP_PORT = EMAIL_ACCOUNTS[DEFAULT_EMAIL_ACCOUNT]['smtp_port']
+
+# Ensure primary account is active
+EMAIL_ACCOUNTS['primary']['active'] = True
 
 # Gemini AI Configuration
 GEMINI_API_KEY = "AIzaSyASwOL-TOo-FNBydsFTN_mWnN1zx7FJkX8"
@@ -235,9 +238,18 @@ Your Team
     
     account = EMAIL_ACCOUNTS[email_account]
     
-    if not account['active'] or not account['password']:
-        print(f"❌ Email account {email_account} is not configured or active")
-        return False, f"Email account {email_account} is not configured"
+    # Check if account is configured
+    if not account['email'] or account['email'] == 'test@example.com':
+        print(f"❌ Email account {email_account} is not properly configured")
+        return False, f"Email account {email_account} is not configured. Please set EMAIL and PASSWORD environment variables."
+    
+    if not account['active']:
+        print(f"❌ Email account {email_account} is not active")
+        return False, f"Email account {email_account} is not active"
+    
+    if not account['password'] or account['password'] == 'test_password':
+        print(f"❌ Email account {email_account} password is not configured")
+        return False, f"Email account {email_account} password is not configured. Please set PASSWORD environment variable."
     
     # Create the email message
     msg = EmailMessage()
@@ -250,7 +262,9 @@ Your Team
     # Send the email
     try:
         # Check if we're in simulation mode (no real email credentials configured)
-        if account['email'] == 'test@example.com' or account['password'] == 'test_password':
+        if (account['email'] == 'test@example.com' or 
+            account['password'] == 'test_password' or 
+            not account['password']):
             print(f"📧 SIMULATION MODE: Email queued for {recipient}")
             print(f"📧 SUBJECT: {subject}")
             print(f"📧 CONTENT: {email_content[:100]}...")
@@ -847,7 +861,8 @@ def auto_reply_with_ai(reply_id):
             first_name=first_name,
             last_name='',  # We don't have last name from replies
             subject=f"Re: {reply['subject']}",
-            message=ai_reply_text
+            message=ai_reply_text,
+            email_account='primary'  # Use primary account for AI replies
         )
         
         if success:
@@ -1087,7 +1102,8 @@ def start_manual_campaign():
                     contact['first_name'],
                     contact['last_name'],
                     subject,
-                    message
+                    message,
+                    email_account='primary'  # Use primary account for campaigns
                 )
                 
                 if success:
