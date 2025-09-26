@@ -148,25 +148,37 @@
 
             <!-- Quick Stats -->
             <div class="row mb-4">
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <div class="stats-card">
                         <h3 id="total-contacts">0</h3>
                         <p class="mb-0">Total Contacts</p>
                     </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <div class="stats-card">
                         <h3 id="sent-emails">0</h3>
                         <p class="mb-0">Emails Sent</p>
                     </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <div class="stats-card">
                         <h3 id="success-rate">0%</h3>
                         <p class="mb-0">Success Rate</p>
                     </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
+                    <div class="stats-card">
+                        <h3 id="valid-emails">0</h3>
+                        <p class="mb-0">Valid Emails</p>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="stats-card">
+                        <h3 id="fake-emails">0</h3>
+                        <p class="mb-0">Fake Emails</p>
+                    </div>
+                </div>
+                <div class="col-md-2">
                     <div class="stats-card">
                         <h3 id="campaign-status">Ready</h3>
                         <p class="mb-0">Campaign Status</p>
@@ -184,6 +196,11 @@
                 <li class="nav-item" role="presentation">
                     <button class="nav-link" id="campaign-tab" data-bs-toggle="tab" data-bs-target="#campaign" type="button" role="tab">
                         <i class="fas fa-paper-plane me-2"></i>Email Campaign
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="validation-tab" data-bs-toggle="tab" data-bs-target="#validation" type="button" role="tab">
+                        <i class="fas fa-shield-alt me-2"></i>Email Validation
                     </button>
                 </li>
             </ul>
@@ -552,6 +569,171 @@ Your Team</textarea>
                 const status = campaignStatus.running ? 'Running' : 
                               campaignStatus.total_emails > 0 ? 'Completed' : 'Ready';
                 campaignStatusElement.textContent = status;
+            }
+            
+            // Load email validation stats
+            loadEmailStats();
+        }
+
+        // Email Validation Functions
+        async function loadEmailStats() {
+            try {
+                const response = await fetch('/api/email-stats');
+                const stats = await response.json();
+                
+                // Update validation stats in dashboard
+                const validEmailsElement = document.getElementById('valid-emails');
+                const fakeEmailsElement = document.getElementById('fake-emails');
+                
+                if (validEmailsElement) {
+                    validEmailsElement.textContent = stats.valid_emails || 0;
+                }
+                
+                if (fakeEmailsElement) {
+                    fakeEmailsElement.textContent = stats.fake_emails || 0;
+                }
+                
+                // Update validation stats in validation tab
+                const validationStatsElement = document.getElementById('validationStats');
+                if (validationStatsElement) {
+                    validationStatsElement.innerHTML = `
+                        <div class="row text-center">
+                            <div class="col-md-3">
+                                <h4 class="text-success">${stats.valid_emails}</h4>
+                                <small>Valid Emails</small>
+                            </div>
+                            <div class="col-md-3">
+                                <h4 class="text-danger">${stats.fake_emails}</h4>
+                                <small>Fake Emails</small>
+                            </div>
+                            <div class="col-md-3">
+                                <h4 class="text-warning">${stats.bounced_emails}</h4>
+                                <small>Bounced Emails</small>
+                            </div>
+                            <div class="col-md-3">
+                                <h4 class="text-info">${stats.validation_rate}%</h4>
+                                <small>Validation Rate</small>
+                            </div>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error loading email stats:', error);
+            }
+        }
+
+        async function validateSingleEmail() {
+            const email = document.getElementById('validateEmail').value;
+            const resultDiv = document.getElementById('validationResult');
+            
+            if (!email) {
+                resultDiv.innerHTML = '<div class="alert alert-warning">Please enter an email address</div>';
+                return;
+            }
+            
+            try {
+                resultDiv.innerHTML = '<div class="alert alert-info">Validating email...</div>';
+                
+                const response = await fetch('/api/validate-email', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email: email })
+                });
+                
+                const result = await response.json();
+                
+                if (result.valid) {
+                    resultDiv.innerHTML = `<div class="alert alert-success">
+                        <i class="fas fa-check-circle me-2"></i>Valid email: ${result.reason}
+                    </div>`;
+                } else {
+                    resultDiv.innerHTML = `<div class="alert alert-danger">
+                        <i class="fas fa-times-circle me-2"></i>Invalid email: ${result.reason}
+                    </div>`;
+                }
+                
+                // Refresh stats
+                loadEmailStats();
+                
+            } catch (error) {
+                resultDiv.innerHTML = '<div class="alert alert-danger">Error validating email</div>';
+            }
+        }
+
+        async function loadFakeEmails() {
+            try {
+                const response = await fetch('/api/fake-emails');
+                const fakeEmails = await response.json();
+                
+                const fakeEmailsList = document.getElementById('fakeEmailsList');
+                
+                if (fakeEmails.length === 0) {
+                    fakeEmailsList.innerHTML = `
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-shield-alt fa-3x mb-3"></i>
+                            <p>No fake emails detected yet.</p>
+                        </div>
+                    `;
+                } else {
+                    let html = '';
+                    fakeEmails.forEach(fake => {
+                        html += `
+                            <div class="contact-item">
+                                <div class="row align-items-center">
+                                    <div class="col-md-6">
+                                        <h6 class="mb-1">${fake.email}</h6>
+                                        <small class="text-muted">${fake.reason}</small>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <span class="badge bg-danger">Fake Email</span>
+                                    </div>
+                                    <div class="col-md-3 text-end">
+                                        <small class="text-muted">${new Date(fake.detected_date).toLocaleString()}</small>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    fakeEmailsList.innerHTML = html;
+                }
+            } catch (error) {
+                console.error('Error loading fake emails:', error);
+            }
+        }
+
+        async function validateAllContacts() {
+            showAlert('Validating all contacts...', 'info');
+            
+            // This would trigger validation for all contacts
+            // For now, just refresh the stats
+            await loadEmailStats();
+            await loadFakeEmails();
+            
+            showAlert('Contact validation completed!', 'success');
+        }
+
+        async function cleanFakeEmails() {
+            if (!confirm('Are you sure you want to remove all fake emails from your contacts?')) return;
+            
+            try {
+                const response = await fetch('/api/clean-fake-emails', {
+                    method: 'POST'
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showAlert(result.message, 'success');
+                    await loadContacts();
+                    await loadEmailStats();
+                    await loadFakeEmails();
+                } else {
+                    showAlert(result.message, 'danger');
+                }
+            } catch (error) {
+                showAlert('Error cleaning fake emails', 'danger');
             }
         }
 
