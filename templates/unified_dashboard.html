@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Email Campaign Manager - Intelligent Marketing Platform</title>
+    <title>Email Campaign Manager - Professional Marketing Platform</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -140,10 +140,10 @@
             <!-- Header -->
             <div class="text-center mb-4">
                 <h1 class="display-4 fw-bold text-primary">
-                    <i class="fas fa-robot me-3"></i>
-                    AI Email Campaign Manager
+                    <i class="fas fa-envelope me-3"></i>
+                    Email Campaign Manager
                 </h1>
-                <p class="lead text-muted">Intelligent Email Marketing with AI-Powered Responses</p>
+                <p class="lead text-muted">Professional Email Marketing Platform</p>
             </div>
 
             <!-- Quick Stats -->
@@ -189,11 +189,6 @@
                         <li class="nav-item" role="presentation">
                             <button class="nav-link" id="replies-tab" data-bs-toggle="tab" data-bs-target="#replies" type="button" role="tab">
                                 <i class="fas fa-reply me-2"></i>Replies <span class="badge bg-danger" id="replies-count">0</span>
-                            </button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="ai-conversations-tab" data-bs-toggle="tab" data-bs-target="#ai-conversations" type="button" role="tab">
-                                <i class="fas fa-robot me-2"></i>AI Conversations <span class="badge bg-success" id="ai-conversations-count">0</span>
                             </button>
                         </li>
                 <li class="nav-item" role="presentation">
@@ -441,8 +436,8 @@ Your Team</textarea>
                                         </div>
                                         <div class="col-4">
                                             <div class="bg-warning bg-opacity-10 p-2 rounded">
-                                                <div class="fw-bold text-warning" id="ai-conversations">12</div>
-                                                <small class="text-muted">Conversations</small>
+                                                <div class="fw-bold text-warning" id="manual-replies">0</div>
+                                                <small class="text-muted">Manual Replies</small>
                                             </div>
                                         </div>
                                     </div>
@@ -466,45 +461,6 @@ Your Team</textarea>
                 </div>
             </div>
 
-                <!-- AI Conversations Tab -->
-                <div class="tab-pane fade" id="ai-conversations" role="tabpanel">
-            <div class="row">
-                        <div class="col-12">
-                    <div class="section-card">
-                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <h4 class="fw-bold mb-0">
-                                        <i class="fas fa-robot me-2"></i>AI Conversation Summary
-                        </h4>
-                                    <div>
-                                        <span class="badge bg-success me-2">
-                                            <i class="fas fa-check me-1"></i>AI Agent Active
-                                        </span>
-                                        <button class="btn btn-info btn-sm" onclick="refreshAIConversations()">
-                                            <i class="fas fa-sync me-1"></i>Refresh
-                                        </button>
-                            </div>
-                        </div>
-                                <div class="alert alert-success">
-                                    <i class="fas fa-robot me-2"></i>
-                                    <strong>🧠 Super Smart AI Agent Active!</strong> The AI now features:
-                                    <ul class="mb-0 mt-2">
-                                        <li><strong>Personality Adaptation:</strong> Automatically selects the best personality for each contact</li>
-                                        <li><strong>Context Memory:</strong> Remembers conversation history for better responses</li>
-                                        <li><strong>Sentiment Analysis:</strong> Detects emotions and intent in incoming emails</li>
-                                        <li><strong>Smart Responses:</strong> Tailored replies based on detected sentiment and urgency</li>
-                                    </ul>
-                                </div>
-                                <div id="aiConversationsList">
-                                    <div class="text-center text-muted py-4">
-                                        <i class="fas fa-robot fa-3x mb-3"></i>
-                                        <p><strong>AI Conversation Intelligence</strong></p>
-                                        <p>AI-powered conversations will appear here as your intelligent agent engages with prospects automatically.</p>
-                                    </div>
-                                </div>
-                </div>
-            </div>
-                    </div>
-                </div>
 
                 <!-- Analytics Tab -->
                 <div class="tab-pane fade" id="analytics" role="tabpanel">
@@ -802,7 +758,6 @@ Your Team</textarea>
             loadCampaignStatus();
             loadReplies();
             loadMonitoringStatus();
-            loadAIConversations(); // Load AI conversations
             loadAnalyticsDashboard(); // Load INSANE analytics! 🔥
             loadEmailAccounts(); // Load email accounts management
             setupEventListeners();
@@ -1349,7 +1304,7 @@ Your Team</textarea>
 
         async function manualCheckAndReply() {
             try {
-                showAlert('🤖 AI is checking for replies and will auto-reply...', 'info');
+                showAlert('📧 Checking for new replies...', 'info');
                 
                 // First check for replies
                 const checkResponse = await fetch('/api/email-monitoring/check-now', {
@@ -1359,7 +1314,7 @@ Your Team</textarea>
                 const checkResult = await checkResponse.json();
                 
                 if (checkResult.success && checkResult.replies_count > 0) {
-                    showAlert(`✅ Found ${checkResult.replies_count} replies! AI is generating responses...`, 'success');
+                    showAlert(`✅ Found ${checkResult.replies_count} replies! Check the Replies tab to respond manually.`, 'success');
                     
                     // Reload replies to show new ones
                     await loadReplies();
@@ -1605,7 +1560,6 @@ Your Team</textarea>
                 if (result.success) {
                     showAlert(`✅ Removed ${result.removed_count} duplicate replies! (${result.original_count} → ${result.current_count})`, 'success');
                     loadReplies();
-                    loadAIConversations(); // Refresh AI conversations too
                 } else {
                     showAlert(result.message, 'danger');
                 }
@@ -1625,7 +1579,6 @@ Your Team</textarea>
                 if (result.success && result.removed_count > 0) {
                     console.log(`🗑️ Auto-removed ${result.removed_count} duplicate replies on page load`);
                     loadReplies();
-                    loadAIConversations(); // Refresh AI conversations too
                 }
             } catch (error) {
                 console.error('Error auto-removing duplicates:', error);
@@ -1648,7 +1601,6 @@ Your Team</textarea>
                 if (result.success) {
                     showAlert(`✅ Retry completed! ${result.success_count} succeeded, ${result.failed_count} failed`, 'success');
                     loadReplies();
-                    loadAIConversations(); // Refresh AI conversations
                 } else {
                     showAlert(result.message, 'danger');
                 }
@@ -1734,28 +1686,31 @@ Your Team</textarea>
             }
         }
 
-        async function autoReplyWithAI(replyId) {
+        async function sendManualReply(replyId, replyText) {
             try {
-                showAlert('🤖 Auto-replying with AI...', 'info');
+                showAlert('📧 Sending manual reply...', 'info');
                 
-                const response = await fetch('/api/ai/auto-reply', {
-                method: 'POST',
-                headers: {
+                const response = await fetch('/api/send-manual-reply', {
+                    method: 'POST',
+                    headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ reply_id: replyId })
+                    body: JSON.stringify({ 
+                        reply_id: replyId,
+                        reply_text: replyText 
+                    })
                 });
                 
                 const result = await response.json();
                 
                 if (result.success) {
-                    showAlert('✅ AI reply sent successfully!', 'success');
-                    loadReplies(); // Refresh replies
+                    showAlert('✅ Manual reply sent successfully!', 'success');
+                    loadReplies();
                 } else {
-                    showAlert(`❌ Failed to send AI reply: ${result.message}`, 'danger');
+                    showAlert(`❌ Manual reply failed: ${result.message}`, 'danger');
                 }
             } catch (error) {
-                showAlert(`❌ Error sending AI reply: ${error.message}`, 'danger');
+                showAlert(`❌ Error sending manual reply: ${error.message}`, 'danger');
             }
         }
 
@@ -1881,7 +1836,12 @@ Your Team</textarea>
         }
 
         function sendAIReply(replyId) {
-            autoReplyWithAI(replyId);
+            const replyText = document.getElementById('aiReplyText').value;
+            if (!replyText.trim()) {
+                showAlert('Please enter a reply message', 'warning');
+                return;
+            }
+            sendManualReply(replyId, replyText);
             const modal = bootstrap.Modal.getInstance(document.getElementById('aiReplyModal'));
             modal.hide();
         }
@@ -1896,7 +1856,12 @@ Your Team</textarea>
         }
 
         function sendSmartReply(replyId) {
-            autoReplyWithAI(replyId);
+            const replyText = document.getElementById('smartReplyText').value;
+            if (!replyText.trim()) {
+                showAlert('Please enter a reply message', 'warning');
+                return;
+            }
+            sendManualReply(replyId, replyText);
             const modal = bootstrap.Modal.getInstance(document.getElementById('smartReplyModal'));
             modal.hide();
         }
@@ -2163,205 +2128,8 @@ Your Team</textarea>
             }
         }
 
-        // ==================== AI CONVERSATION SUMMARY ====================
 
-        async function loadAIConversations() {
-            try {
-                console.log('🤖 LOADING AI CONVERSATIONS...');
-                const response = await fetch('/api/replies');
-                const allReplies = await response.json();
-                console.log('🤖 ALL REPLIES:', allReplies);
-                
-                // Filter only AI-replied conversations
-                const aiConversations = allReplies.filter(reply => reply.ai_auto_replied);
-                console.log('🤖 AI CONVERSATIONS:', aiConversations);
-                
-                updateAIConversationsDisplay(aiConversations);
-                updateAIConversationsCount(aiConversations.length);
-                
-                // If no AI conversations, show sample data
-                if (aiConversations.length === 0) {
-                    console.log('🤖 NO AI CONVERSATIONS - SHOWING SAMPLE');
-                    const sampleConversations = [
-                        {
-                            id: 'sample-1',
-                            from_email: 'customer@example.com',
-                            from_name: 'Sample Customer',
-                            subject: 'Re: Your Email Campaign',
-                            content: 'Thank you for reaching out. I am interested in learning more.',
-                            ai_auto_replied: true,
-                            ai_reply_text: 'Great! I would be happy to provide more information about our services.',
-                            timestamp: new Date().toISOString(),
-                            sentiment: 'positive'
-                        }
-                    ];
-                    updateAIConversationsDisplay(sampleConversations);
-                    updateAIConversationsCount(sampleConversations.length);
-                }
-            } catch (error) {
-                console.error('Error loading AI conversations:', error);
-            }
-        }
 
-        function updateAIConversationsDisplay(conversations) {
-            const container = document.getElementById('aiConversationsList');
-            
-            if (conversations.length === 0) {
-                container.innerHTML = `
-                    <div class="text-center text-muted py-4">
-                        <i class="fas fa-robot fa-3x mb-3"></i>
-                        <p>No AI conversations yet. The AI will automatically respond to incoming emails.</p>
-                    </div>
-                `;
-                return;
-            }
-
-            let html = '';
-            conversations.forEach((conversation, index) => {
-                const aiReplyDate = conversation.ai_reply_date ? new Date(conversation.ai_reply_date).toLocaleString() : 'Just now';
-                
-                html += `
-                    <div class="card mb-3">
-                        <div class="card-header d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="mb-0">
-                                    <i class="fas fa-user me-2"></i>${conversation.from_name || conversation.from_email}
-                                </h6>
-                                <small class="text-muted">${conversation.subject}</small>
-                            </div>
-                            <div>
-                                <span class="badge bg-success">
-                                    <i class="fas fa-robot me-1"></i>AI Replied
-                                </span>
-                                <small class="text-muted ms-2">${aiReplyDate}</small>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <h6 class="text-primary">
-                                        <i class="fas fa-inbox me-2"></i>Incoming Email:
-                                    </h6>
-                                    <div class="bg-light p-3 rounded">
-                                        <p class="mb-0 small">${conversation.message.substring(0, 200)}${conversation.message.length > 200 ? '...' : ''}</p>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <h6 class="text-success">
-                                        <i class="fas fa-robot me-2"></i>AI Response:
-                                    </h6>
-                                    <div class="bg-light p-3 rounded">
-                                        <p class="mb-0 small text-success">
-                                            <i class="fas fa-check-circle me-1"></i>
-                                            AI automatically generated and sent a professional response
-                                        </p>
-                                        <small class="text-muted">Response sent at ${aiReplyDate}</small>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="mt-3">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <small class="text-muted">
-                                        <i class="fas fa-clock me-1"></i>
-                                        Received: ${new Date(conversation.received_date).toLocaleString()}
-                                    </small>
-                                    <div>
-                                        <button class="btn btn-sm btn-outline-primary" onclick="viewAIConversation(${conversation.id})">
-                                            <i class="fas fa-eye me-1"></i>View Details
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            });
-            
-            container.innerHTML = html;
-        }
-
-        function updateAIConversationsCount(count) {
-            document.getElementById('ai-conversations-count').textContent = count;
-        }
-
-        async function refreshAIConversations() {
-            showAlert('🔄 Refreshing AI conversations...', 'info');
-            await loadAIConversations();
-            showAlert('✅ AI conversations refreshed!', 'success');
-        }
-
-        function viewAIConversation(conversationId) {
-            // Find the conversation
-            const conversation = replies.find(r => r.id === conversationId);
-            if (!conversation) return;
-
-            // Show conversation details in a modal
-            const modalHtml = `
-                <div class="modal fade" id="aiConversationModal" tabindex="-1">
-                    <div class="modal-dialog modal-lg">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title">
-                                    <i class="fas fa-robot me-2"></i>AI Conversation Details
-                                </h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                            </div>
-                            <div class="modal-body">
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="card">
-                                            <div class="card-header">
-                                                <h6 class="mb-0">
-                                                    <i class="fas fa-inbox me-2"></i>Incoming Email
-                                                </h6>
-                                            </div>
-                                            <div class="card-body">
-                                                <p><strong>From:</strong> ${conversation.from_name || conversation.from_email}</p>
-                                                <p><strong>Subject:</strong> ${conversation.subject}</p>
-                                                <p><strong>Received:</strong> ${new Date(conversation.received_date).toLocaleString()}</p>
-                                                <hr>
-                                                <p><strong>Message:</strong></p>
-                                                <div class="bg-light p-3 rounded">
-                                                    <p class="mb-0">${conversation.message}</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="card">
-                                            <div class="card-header">
-                                                <h6 class="mb-0">
-                                                    <i class="fas fa-robot me-2"></i>AI Response
-                                                </h6>
-                                            </div>
-                                            <div class="card-body">
-                                                <p><strong>Status:</strong> <span class="badge bg-success">AI Replied</span></p>
-                                                <p><strong>Sent:</strong> ${conversation.ai_reply_date ? new Date(conversation.ai_reply_date).toLocaleString() : 'Just now'}</p>
-                                                <hr>
-                                                <p><strong>AI Generated Response:</strong></p>
-                                                <div class="bg-success bg-opacity-10 p-3 rounded">
-                                                    <p class="mb-0 text-success">
-                                                        <i class="fas fa-check-circle me-1"></i>
-                                                        AI automatically analyzed the email and sent a professional, contextual response.
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            document.body.insertAdjacentHTML('beforeend', modalHtml);
-            const modal = new bootstrap.Modal(document.getElementById('aiConversationModal'));
-            modal.show();
-        }
     </script>
 </body>
 </html>

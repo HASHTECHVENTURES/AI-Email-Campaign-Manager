@@ -126,6 +126,11 @@ Your Team"""
                 
                 sent_count += 1
                 print(f"✅ EMAIL SENT TO: {contact['email']}")
+                print(f"📊 SENT COUNT NOW: {sent_count}")
+                print(f"📋 TOTAL SENT EMAILS: {len(sent_emails)}")
+                
+                # Force update contact status immediately
+                print(f"🔧 CONTACT STATUS: {contact['email']} = {contact['status']}")
                 
             except Exception as e:
                 print(f"❌ EMAIL FAILED TO: {contact['email']} - {str(e)}")
@@ -144,6 +149,15 @@ def get_status():
     sent_count = len([c for c in contacts if c['status'] == 'Sent'])
     failed_count = len([c for c in contacts if c['status'] == 'Failed'])
     
+    print(f"📊 STATUS DEBUG:")
+    print(f"   Total contacts: {len(contacts)}")
+    print(f"   Sent count: {sent_count}")
+    print(f"   Failed count: {failed_count}")
+    print(f"   Sent emails tracked: {len(sent_emails)}")
+    
+    for i, contact in enumerate(contacts):
+        print(f"   Contact {i+1}: {contact['email']} = {contact['status']}")
+    
     return jsonify({
         'running': False,
         'total_emails': len(contacts),
@@ -157,6 +171,57 @@ def get_replies():
     """Get all replies"""
     print(f"📬 GET REPLIES: {len(replies)} replies")
     return jsonify(replies)
+
+@app.route('/api/send-manual-reply', methods=['POST'])
+def send_manual_reply():
+    """Send a manual reply to a specific email"""
+    global replies
+    
+    data = request.get_json()
+    reply_id = data.get('reply_id')
+    reply_text = data.get('reply_text')
+    
+    if not reply_id or not reply_text:
+        return jsonify({'success': False, 'message': 'Reply ID and text required'})
+    
+    # Find the original reply
+    original_reply = None
+    for reply in replies:
+        if reply['id'] == reply_id:
+            original_reply = reply
+            break
+    
+    if not original_reply:
+        return jsonify({'success': False, 'message': 'Reply not found'})
+    
+    try:
+        print(f"📤 SENDING MANUAL REPLY TO: {original_reply['from_email']}")
+        
+        # Create reply email
+        msg = EmailMessage()
+        msg['From'] = EMAIL
+        msg['To'] = original_reply['from_email']
+        msg['Subject'] = f"Re: {original_reply['subject'].replace('Re: ', '')}"
+        msg.set_content(reply_text)
+        
+        # Send email
+        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+            server.starttls()
+            server.login(EMAIL, PASSWORD)
+            server.send_message(msg)
+        
+        # Mark as manually replied
+        original_reply['manual_reply_sent'] = True
+        original_reply['manual_reply_text'] = reply_text
+        original_reply['manual_reply_date'] = datetime.now().isoformat()
+        
+        print(f"✅ MANUAL REPLY SENT TO: {original_reply['from_email']}")
+        
+        return jsonify({'success': True, 'message': 'Manual reply sent successfully'})
+        
+    except Exception as e:
+        print(f"❌ MANUAL REPLY FAILED TO: {original_reply['from_email']} - {str(e)}")
+        return jsonify({'success': False, 'message': f'Error sending reply: {str(e)}'})
 
 @app.route('/api/email-monitoring/check-now', methods=['POST'])
 def check_replies():
@@ -174,12 +239,21 @@ def check_replies():
         mail.login(EMAIL, PASSWORD)
         mail.select('inbox')
         
-        # Search for recent emails
-        mail.search(None, 'ALL')
+        # Search for recent emails - get ALL emails from today
+        from datetime import date
+        today = date.today().strftime('%d-%b-%Y')
+        print(f"🔍 SEARCHING FOR EMAILS FROM: {today}")
         
-        # Get the last 10 emails
-        _, message_numbers = mail.search(None, 'ALL')
-        message_numbers = message_numbers[0].split()[-10:]  # Last 10 emails
+        # Search for emails from today
+        _, message_numbers = mail.search(None, f'SINCE {today}')
+        if message_numbers[0]:
+            message_numbers = message_numbers[0].split()
+            print(f"📬 FOUND {len(message_numbers)} EMAILS FROM TODAY")
+        else:
+            # Fallback to last 20 emails if no emails today
+            _, message_numbers = mail.search(None, 'ALL')
+            message_numbers = message_numbers[0].split()[-20:]  # Last 20 emails
+            print(f"📬 FALLBACK: CHECKING LAST {len(message_numbers)} EMAILS")
         
         new_replies = 0
         
@@ -195,13 +269,20 @@ def check_replies():
             email_match = re.search(r'[\w\.-]+@[\w\.-]+', from_email)
             if email_match:
                 sender_email = email_match.group()
+                print(f"📧 CHECKING EMAIL FROM: {sender_email}")
                 
                 # Check if this is from someone we sent emails to
                 sent_to_this_person = any(sent['recipient'].lower() == sender_email.lower() for sent in sent_emails)
+                print(f"🔍 SENT TO THIS PERSON: {sent_to_this_person}")
                 
                 if sent_to_this_person:
-                    # Check if we already have this reply
-                    existing_reply = any(r['from_email'].lower() == sender_email.lower() for r in replies)
+                    # Check if we already have this reply (check by email AND subject)
+                    existing_reply = any(
+                        r['from_email'].lower() == sender_email.lower() and 
+                        r['subject'] == subject 
+                        for r in replies
+                    )
+                    print(f"🔍 EXISTING REPLY: {existing_reply}")
                     
                     if not existing_reply:
                         # Get email content
@@ -229,11 +310,10 @@ def check_replies():
                         new_replies += 1
                         
                         print(f"📬 NEW REPLY FROM: {sender_email}")
+                        print(f"📝 REPLY CONTENT: {content[:200]}...")
                         
-                        # Generate AI reply
-                        ai_reply = generate_ai_reply(content, sender_email)
-                        if ai_reply:
-                            send_ai_reply(sender_email, subject, ai_reply, reply)
+                        # Don't auto-reply, just store the reply for manual response
+                        print(f"📬 REPLY STORED FOR MANUAL RESPONSE: {sender_email}")
         
         mail.close()
         mail.logout()
@@ -245,75 +325,6 @@ def check_replies():
         print(f"❌ REPLY CHECK FAILED: {str(e)}")
         return jsonify({'success': False, 'message': f'Error checking replies: {str(e)}'})
 
-def generate_ai_reply(original_message, sender_email):
-    """Generate AI reply using Gemini"""
-    try:
-        print(f"🤖 GENERATING AI REPLY for {sender_email}")
-        
-        prompt = f"""You are a professional email assistant. Someone replied to our email campaign with this message:
-
-"{original_message}"
-
-Please write a helpful, professional, and friendly response. Keep it concise and engaging. Do not mention that you are an AI."""
-
-        headers = {
-            'Content-Type': 'application/json',
-            'X-goog-api-key': GEMINI_API_KEY
-        }
-        
-        data = {
-            "contents": [
-                {
-                    "parts": [
-                        {
-                            "text": prompt
-                        }
-                    ]
-                }
-            ]
-        }
-        
-        response = requests.post(GEMINI_API_URL, headers=headers, json=data, timeout=10)
-        
-        if response.status_code == 200:
-            result = response.json()
-            ai_reply = result['candidates'][0]['content']['parts'][0]['text']
-            print(f"✅ AI REPLY GENERATED: {ai_reply[:100]}...")
-            return ai_reply
-        else:
-            print(f"❌ AI API ERROR: {response.status_code}")
-            return "Thank you for your email! We appreciate your response and will get back to you soon."
-            
-    except Exception as e:
-        print(f"❌ AI GENERATION ERROR: {str(e)}")
-        return "Thank you for your email! We appreciate your response and will get back to you soon."
-
-def send_ai_reply(recipient, original_subject, ai_message, reply_obj):
-    """Send AI-generated reply"""
-    try:
-        print(f"📤 SENDING AI REPLY TO: {recipient}")
-        
-        # Create reply email
-        msg = EmailMessage()
-        msg['From'] = EMAIL
-        msg['To'] = recipient
-        msg['Subject'] = f"Re: {original_subject.replace('Re: ', '')}"
-        msg.set_content(ai_message)
-        
-        # Send email
-        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
-            server.starttls()
-            server.login(EMAIL, PASSWORD)
-            server.send_message(msg)
-        
-        # Mark as AI replied
-        reply_obj['ai_auto_replied'] = True
-        reply_obj['ai_reply_text'] = ai_message
-        
-        print(f"✅ AI REPLY SENT TO: {recipient}")
-        
-    except Exception as e:
-        print(f"❌ AI REPLY FAILED TO: {recipient} - {str(e)}")
 
 if __name__ == '__main__':
     print("🚀 STARTING SIMPLE WORKING EMAIL SYSTEM...")
