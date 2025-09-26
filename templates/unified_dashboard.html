@@ -206,6 +206,10 @@
                                 <h4 class="fw-bold mb-3">
                                     <i class="fas fa-user-plus me-2"></i>Add New Contact
                         </h4>
+                                <div class="alert alert-warning mb-3">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    <strong>Important:</strong> You must add contacts before starting a campaign!
+                                </div>
                                 <form id="addContactForm">
                         <div class="mb-3">
                                         <label class="form-label">Email Address *</label>
@@ -265,6 +269,10 @@
                                 <h4 class="fw-bold mb-3">
                                     <i class="fas fa-cog me-2"></i>Campaign Setup
                         </h4>
+                                <div class="alert alert-warning mb-3">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    <strong>Step 1:</strong> Add contacts first, then start your campaign!
+                                </div>
                                 <form id="campaignForm">
                         <div class="mb-3">
                                         <label class="form-label">Email Subject *</label>
@@ -965,7 +973,7 @@ Your Team</textarea>
 
         async function startCampaign() {
             if (contacts.length === 0) {
-                showAlert('Please add contacts before starting a campaign!', 'warning');
+                showAlert('❌ No contacts added yet! Please add contacts first before starting a campaign.', 'danger');
                 return;
             }
 
