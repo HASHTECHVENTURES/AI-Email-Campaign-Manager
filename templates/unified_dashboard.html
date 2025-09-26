@@ -33,6 +33,16 @@
             transform: translateY(-2px);
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
         }
+        
+        .blink {
+            animation: blink-animation 1s steps(5, start) infinite;
+        }
+        
+        @keyframes blink-animation {
+            to {
+                visibility: hidden;
+            }
+        }
         .btn-primary {
             background: linear-gradient(45deg, #667eea, #764ba2);
             border: none;
@@ -347,11 +357,8 @@ Your Team</textarea>
                                         <span class="badge bg-success me-2">
                                             <i class="fas fa-robot me-1"></i>AI Agent Auto-Active
                                         </span>
-                                        <span class="badge bg-info me-2" id="next-check-timer">
-                                            <i class="fas fa-clock me-1"></i>Next Check: <span id="countdown-timer">--:--</span>
-                                        </span>
-                                        <span class="badge bg-warning me-2" id="current-time">
-                                            <i class="fas fa-calendar-alt me-1"></i><span id="live-time">--:--:--</span>
+                                        <span class="badge bg-success me-2" id="live-status">
+                                            <i class="fas fa-circle me-1 blink"></i>LIVE MONITORING
                                         </span>
                                         <button class="btn btn-info btn-sm" onclick="checkForReplies()">
                                             <i class="fas fa-sync me-1"></i>Refresh Now
@@ -744,24 +751,10 @@ Your Team</textarea>
                                     </div>
                                 </div>
                                 <div class="row mt-3">
-                                    <div class="col-md-6">
-                                        <label class="form-label">Email Check Interval</label>
-                                        <select class="form-select" id="check-interval">
-                                            <option value="60000">1 minute</option>
-                                            <option value="120000" selected>2 minutes</option>
-                                            <option value="300000">5 minutes</option>
-                                            <option value="600000">10 minutes</option>
-                                            <option value="900000">15 minutes</option>
-                                            <option value="1800000">30 minutes</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label">AI Auto-Reply</label>
-                                        <div class="form-check form-switch">
-                                            <input class="form-check-input" type="checkbox" id="ai-auto-reply" checked>
-                                            <label class="form-check-label" for="ai-auto-reply">
-                                                Enable AI Auto-Reply
-                                            </label>
+                                    <div class="col-md-12">
+                                        <div class="alert alert-success">
+                                            <i class="fas fa-bolt me-2"></i>
+                                            <strong>LIVE MODE ACTIVE:</strong> System is continuously monitoring emails and AI will respond instantly!
                                         </div>
                                     </div>
                                 </div>
@@ -811,78 +804,53 @@ Your Team</textarea>
             loadAnalyticsDashboard();
         }, 30000);
         
-        // Auto-check for replies based on user settings
-        let emailCheckInterval;
-        let countdownInterval;
-        let nextCheckTime;
+        // LIVE CONTINUOUS EMAIL MONITORING
+        let liveMonitoringInterval;
+        let isLiveMonitoring = false;
         
-        function updateCountdown() {
-            if (!nextCheckTime) return;
+        function startLiveMonitoring() {
+            if (isLiveMonitoring) return;
             
-            const now = new Date().getTime();
-            const timeLeft = nextCheckTime - now;
+            console.log('🔥 STARTING LIVE EMAIL MONITORING...');
+            isLiveMonitoring = true;
             
-            if (timeLeft <= 0) {
-                document.getElementById('countdown-timer').textContent = 'Checking...';
-                return;
+            // Check immediately
+            manualCheckAndReply();
+            
+            // Then check every 30 seconds continuously
+            liveMonitoringInterval = setInterval(() => {
+                console.log('⚡ LIVE CHECK: Scanning for replies...');
+                manualCheckAndReply();
+            }, 30000); // 30 seconds for live monitoring
+            
+            // Update status indicator
+            const liveStatus = document.getElementById('live-status');
+            if (liveStatus) {
+                liveStatus.innerHTML = '<i class="fas fa-circle me-1 blink"></i>LIVE ACTIVE';
+                liveStatus.className = 'badge bg-success me-2';
             }
-            
-            const minutes = Math.floor(timeLeft / 60000);
-            const seconds = Math.floor((timeLeft % 60000) / 1000);
-            
-            document.getElementById('countdown-timer').textContent = 
-                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
         }
         
-        function updateLiveTime() {
-            const now = new Date();
-            const timeString = now.toLocaleTimeString('en-US', { 
-                hour12: false,
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit'
-            });
-            document.getElementById('live-time').textContent = timeString;
-        }
-        
-        function startEmailCheckInterval() {
-            const interval = document.getElementById('check-interval')?.value || 120000; // Default 2 minutes
-            const aiAutoReply = document.getElementById('ai-auto-reply')?.checked || true;
+        function stopLiveMonitoring() {
+            if (!isLiveMonitoring) return;
             
-            if (emailCheckInterval) {
-                clearInterval(emailCheckInterval);
-            }
-            if (countdownInterval) {
-                clearInterval(countdownInterval);
+            console.log('🛑 STOPPING LIVE EMAIL MONITORING...');
+            isLiveMonitoring = false;
+            
+            if (liveMonitoringInterval) {
+                clearInterval(liveMonitoringInterval);
             }
             
-            // Set next check time
-            nextCheckTime = new Date().getTime() + parseInt(interval);
-            
-            // Start countdown timer (update every second)
-            countdownInterval = setInterval(() => {
-                updateCountdown();
-                updateLiveTime();
-            }, 1000);
-            updateCountdown(); // Initial update
-            updateLiveTime(); // Initial time update
-            
-            emailCheckInterval = setInterval(() => {
-                console.log('🔄 Auto-checking for replies...');
-                if (aiAutoReply) {
-                    manualCheckAndReply();
-                } else {
-                    checkForReplies();
-                }
-                // Reset next check time
-                nextCheckTime = new Date().getTime() + parseInt(interval);
-            }, parseInt(interval));
-            
-            console.log(`🔄 Email checking started every ${interval/60000} minutes`);
+            // Update status indicator
+            const liveStatus = document.getElementById('live-status');
+            if (liveStatus) {
+                liveStatus.innerHTML = '<i class="fas fa-circle me-1"></i>LIVE STOPPED';
+                liveStatus.className = 'badge bg-secondary me-2';
+            }
         }
         
-        // Start the interval
-        startEmailCheckInterval();
+        // Start live monitoring immediately
+        startLiveMonitoring();
         });
 
         function setupEventListeners() {
@@ -892,23 +860,7 @@ Your Team</textarea>
                 addContact();
             });
             
-            // Settings change listeners
-            const checkIntervalSelect = document.getElementById('check-interval');
-            const aiAutoReplyCheckbox = document.getElementById('ai-auto-reply');
-            
-            if (checkIntervalSelect) {
-                checkIntervalSelect.addEventListener('change', function() {
-                    console.log('🔄 Check interval changed, restarting timer...');
-                    startEmailCheckInterval();
-                });
-            }
-            
-            if (aiAutoReplyCheckbox) {
-                aiAutoReplyCheckbox.addEventListener('change', function() {
-                    console.log('🤖 AI auto-reply setting changed, restarting timer...');
-                    startEmailCheckInterval();
-                });
-            }
+            // Live monitoring is always active - no settings needed!
 
             // Campaign form
             document.getElementById('campaignForm').addEventListener('submit', function(e) {
