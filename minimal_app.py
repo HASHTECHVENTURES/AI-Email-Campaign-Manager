@@ -33,10 +33,47 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 # Create uploads directory if it doesn't exist
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# Gmail Configuration
-EMAIL = os.getenv('EMAIL', 'test@example.com')
-PASSWORD = os.getenv('PASSWORD', 'test_password')
-SMTP_SERVER = "smtp.gmail.com"
+# Gmail Configuration - Support for Multiple Email Accounts
+EMAIL_ACCOUNTS = {
+    'primary': {
+        'email': os.getenv('EMAIL', 'test@example.com'),
+        'password': os.getenv('PASSWORD', 'test_password'),
+        'name': 'Primary Account',
+        'active': True,
+        'smtp_server': 'smtp.gmail.com',
+        'smtp_port': 587
+    },
+    'marketing': {
+        'email': os.getenv('MARKETING_EMAIL', 'marketing@yourcompany.com'),
+        'password': os.getenv('MARKETING_PASSWORD', ''),
+        'name': 'Marketing Team',
+        'active': False,
+        'smtp_server': 'smtp.gmail.com',
+        'smtp_port': 587
+    },
+    'sales': {
+        'email': os.getenv('SALES_EMAIL', 'sales@yourcompany.com'),
+        'password': os.getenv('SALES_PASSWORD', ''),
+        'name': 'Sales Team',
+        'active': False,
+        'smtp_server': 'smtp.gmail.com',
+        'smtp_port': 587
+    },
+    'support': {
+        'email': os.getenv('SUPPORT_EMAIL', 'support@yourcompany.com'),
+        'password': os.getenv('SUPPORT_PASSWORD', ''),
+        'name': 'Support Team',
+        'active': False,
+        'smtp_server': 'smtp.gmail.com',
+        'smtp_port': 587
+    }
+}
+
+# Default email account
+DEFAULT_EMAIL_ACCOUNT = 'primary'
+EMAIL = EMAIL_ACCOUNTS[DEFAULT_EMAIL_ACCOUNT]['email']
+PASSWORD = EMAIL_ACCOUNTS[DEFAULT_EMAIL_ACCOUNT]['password']
+SMTP_SERVER = EMAIL_ACCOUNTS[DEFAULT_EMAIL_ACCOUNT]['smtp_server']
 SMTP_PORT = 587
 
 # Gemini AI Configuration
@@ -171,7 +208,7 @@ sent_campaign_emails = {
     'campaigns': []  # Track full campaign details
 }
 
-def send_email_with_tracking(recipient, first_name, last_name, subject, message):
+def send_email_with_tracking(recipient, first_name, last_name, subject, message, email_account='primary'):
     """Send email with actual SMTP functionality"""
     if not recipient or not first_name:
         return False, "Incomplete recipient data"
@@ -192,18 +229,28 @@ Best regards,
 Your Team
 """
     
+    # Get email account configuration
+    if email_account not in EMAIL_ACCOUNTS:
+        email_account = DEFAULT_EMAIL_ACCOUNT
+    
+    account = EMAIL_ACCOUNTS[email_account]
+    
+    if not account['active'] or not account['password']:
+        print(f"❌ Email account {email_account} is not configured or active")
+        return False, f"Email account {email_account} is not configured"
+    
     # Create the email message
     msg = EmailMessage()
-    msg['From'] = EMAIL
+    msg['From'] = account['email']
     msg['To'] = recipient
     msg['Subject'] = subject
-    msg['Return-Path'] = EMAIL  # For bounce tracking
+    msg['Return-Path'] = account['email']  # For bounce tracking
     msg.set_content(email_content)
     
     # Send the email
     try:
         # Check if we're in simulation mode (no real email credentials configured)
-        if EMAIL == 'test@example.com' or PASSWORD == 'test_password':
+        if account['email'] == 'test@example.com' or account['password'] == 'test_password':
             print(f"📧 SIMULATION MODE: Email queued for {recipient}")
             print(f"📧 SUBJECT: {subject}")
             print(f"📧 CONTENT: {email_content[:100]}...")
@@ -221,9 +268,9 @@ Your Team
             print(f"✅ EMAIL QUEUED: {recipient} - {subject}")
             return True, "Email queued successfully (configure SMTP for live sending)"
         
-        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+        with smtplib.SMTP(account['smtp_server'], account['smtp_port']) as server:
             server.starttls()
-            server.login(EMAIL, PASSWORD)
+            server.login(account['email'], account['password'])
             server.send_message(msg)
         
         # Track sent email
@@ -1128,9 +1175,9 @@ def send_reply():
         msg.set_content(message)
         
         # Send the email
-        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+        with smtplib.SMTP(account['smtp_server'], account['smtp_port']) as server:
             server.starttls()
-            server.login(EMAIL, PASSWORD)
+            server.login(account['email'], account['password'])
             server.send_message(msg)
         
         # Update reply status
@@ -1386,6 +1433,80 @@ def get_active_followups():
             'success': True,
             'followups': active_followups,
             'analytics': followup_analytics
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
+
+# ==================== EMAIL ACCOUNT MANAGEMENT ====================
+
+@app.route('/api/email-accounts')
+def get_email_accounts():
+    """Get all email accounts configuration"""
+    try:
+        # Return accounts without passwords for security
+        safe_accounts = {}
+        for key, account in EMAIL_ACCOUNTS.items():
+            safe_accounts[key] = {
+                'email': account['email'],
+                'name': account['name'],
+                'active': account['active'],
+                'smtp_server': account['smtp_server'],
+                'smtp_port': account['smtp_port']
+            }
+        
+        return jsonify({
+            'success': True,
+            'accounts': safe_accounts,
+            'default_account': DEFAULT_EMAIL_ACCOUNT
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
+
+@app.route('/api/email-accounts/update', methods=['POST'])
+def update_email_account():
+    """Update email account configuration"""
+    try:
+        data = request.get_json()
+        account_id = data.get('account_id')
+        email = data.get('email')
+        password = data.get('password')
+        name = data.get('name')
+        active = data.get('active', True)
+        
+        if account_id not in EMAIL_ACCOUNTS:
+            return jsonify({'success': False, 'message': 'Invalid account ID'})
+        
+        # Update account configuration
+        EMAIL_ACCOUNTS[account_id]['email'] = email
+        if password:  # Only update password if provided
+            EMAIL_ACCOUNTS[account_id]['password'] = password
+        EMAIL_ACCOUNTS[account_id]['name'] = name
+        EMAIL_ACCOUNTS[account_id]['active'] = active
+        
+        return jsonify({
+            'success': True,
+            'message': f'Email account {account_id} updated successfully'
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
+
+@app.route('/api/email-accounts/set-default', methods=['POST'])
+def set_default_email_account():
+    """Set default email account for campaigns"""
+    try:
+        data = request.get_json()
+        account_id = data.get('account_id')
+        
+        if account_id not in EMAIL_ACCOUNTS:
+            return jsonify({'success': False, 'message': 'Invalid account ID'})
+        
+        global DEFAULT_EMAIL_ACCOUNT
+        DEFAULT_EMAIL_ACCOUNT = account_id
+        
+        return jsonify({
+            'success': True,
+            'message': f'Default email account set to {account_id}',
+            'default_account': DEFAULT_EMAIL_ACCOUNT
         })
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)})

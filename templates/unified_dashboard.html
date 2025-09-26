@@ -190,6 +190,9 @@
                     <button class="nav-link" id="analytics-tab" data-bs-toggle="tab" data-bs-target="#analytics" type="button" role="tab">
                         <i class="fas fa-chart-line me-2"></i>Analytics
                     </button>
+                    <button class="nav-link" id="settings-tab" data-bs-toggle="tab" data-bs-target="#settings" type="button" role="tab">
+                        <i class="fas fa-cog me-2"></i>Settings
+                    </button>
                 </li>
             </ul>
 
@@ -617,6 +620,116 @@ Your Team</textarea>
                         </div>
                     </div>
                 </div>
+
+                <!-- Settings Tab -->
+                <div class="tab-pane fade" id="settings" role="tabpanel">
+                    <!-- Email Account Management -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="section-card">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h4 class="fw-bold mb-0">
+                                        <i class="fas fa-envelope me-2"></i>📧 Email Account Management
+                                    </h4>
+                                    <button class="btn btn-primary btn-sm" onclick="loadEmailAccounts()">
+                                        <i class="fas fa-sync me-1"></i>Refresh
+                                    </button>
+                                </div>
+                                <p class="text-muted mb-3">Manage multiple email accounts for different campaigns and departments.</p>
+                                
+                                <!-- Email Accounts List -->
+                                <div id="email-accounts-list">
+                                    <div class="text-center text-muted py-4">
+                                        <i class="fas fa-envelope fa-3x mb-3"></i>
+                                        <h5>Loading Email Accounts...</h5>
+                                        <p>Please wait while we load your email account configurations.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Campaign Settings -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="section-card">
+                                <h5 class="fw-bold mb-3">
+                                    <i class="fas fa-cog me-2"></i>Campaign Settings
+                                </h5>
+                                <div class="mb-3">
+                                    <label class="form-label">Default Email Account</label>
+                                    <select class="form-select" id="default-email-account">
+                                        <option value="primary">Primary Account</option>
+                                        <option value="marketing">Marketing Team</option>
+                                        <option value="sales">Sales Team</option>
+                                        <option value="support">Support Team</option>
+                                    </select>
+                                </div>
+                                <button class="btn btn-primary" onclick="updateDefaultEmailAccount()">
+                                    <i class="fas fa-save me-1"></i>Save Settings
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="section-card">
+                                <h5 class="fw-bold mb-3">
+                                    <i class="fas fa-chart-line me-2"></i>Account Analytics
+                                </h5>
+                                <div class="row">
+                                    <div class="col-6">
+                                        <div class="text-center">
+                                            <div class="display-6 fw-bold text-primary" id="total-accounts">4</div>
+                                            <small class="text-muted">Total Accounts</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="text-center">
+                                            <div class="display-6 fw-bold text-success" id="active-accounts">1</div>
+                                            <small class="text-muted">Active Accounts</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- System Settings -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="section-card">
+                                <h5 class="fw-bold mb-3">
+                                    <i class="fas fa-sliders-h me-2"></i>System Settings
+                                </h5>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="auto-monitoring" checked>
+                                            <label class="form-check-label" for="auto-monitoring">
+                                                Auto Email Monitoring
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="ai-replies" checked>
+                                            <label class="form-check-label" for="ai-replies">
+                                                AI Auto-Replies
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="follow-ups" checked>
+                                            <label class="form-check-label" for="follow-ups">
+                                                Automated Follow-ups
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 </div>
             </div>
 
@@ -641,6 +754,7 @@ Your Team</textarea>
             loadMonitoringStatus();
             loadAIConversations(); // Load AI conversations
             loadAnalyticsDashboard(); // Load INSANE analytics! 🔥
+            loadEmailAccounts(); // Load email accounts management
             setupEventListeners();
             
             // Auto-remove duplicates on page load
@@ -1748,6 +1862,129 @@ Your Team</textarea>
             setTimeout(() => {
                 showAlert('✅ Analytics report exported! (Feature coming soon)', 'success');
             }, 1000);
+        }
+
+        // ==================== EMAIL ACCOUNT MANAGEMENT ====================
+
+        async function loadEmailAccounts() {
+            try {
+                const response = await fetch('/api/email-accounts');
+                const data = await response.json();
+                
+                if (data.success) {
+                    updateEmailAccountsDisplay(data.accounts, data.default_account);
+                } else {
+                    showAlert('❌ Failed to load email accounts', 'danger');
+                }
+            } catch (error) {
+                console.error('Error loading email accounts:', error);
+                showAlert('❌ Error loading email accounts', 'danger');
+            }
+        }
+
+        function updateEmailAccountsDisplay(accounts, defaultAccount) {
+            const container = document.getElementById('email-accounts-list');
+            let html = '';
+            
+            for (const [key, account] of Object.entries(accounts)) {
+                const isDefault = key === defaultAccount;
+                const statusClass = account.active ? 'success' : 'secondary';
+                const statusText = account.active ? 'Active' : 'Inactive';
+                
+                html += `
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="fw-bold mb-1">
+                                        ${account.name}
+                                        ${isDefault ? '<span class="badge bg-primary ms-2">Default</span>' : ''}
+                                    </h6>
+                                    <p class="text-muted mb-2">${account.email}</p>
+                                    <span class="badge bg-${statusClass}">${statusText}</span>
+                                </div>
+                                <div class="btn-group">
+                                    <button class="btn btn-outline-primary btn-sm" onclick="editEmailAccount('${key}')">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-outline-${account.active ? 'warning' : 'success'} btn-sm" 
+                                            onclick="toggleEmailAccount('${key}', ${!account.active})">
+                                        <i class="fas fa-${account.active ? 'pause' : 'play'}"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            container.innerHTML = html;
+            
+            // Update analytics
+            const totalAccounts = Object.keys(accounts).length;
+            const activeAccounts = Object.values(accounts).filter(acc => acc.active).length;
+            
+            document.getElementById('total-accounts').textContent = totalAccounts;
+            document.getElementById('active-accounts').textContent = activeAccounts;
+        }
+
+        async function editEmailAccount(accountId) {
+            showAlert('📧 Email account editing feature coming soon!', 'info');
+        }
+
+        async function toggleEmailAccount(accountId, active) {
+            try {
+                const response = await fetch('/api/email-accounts/update', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        account_id: accountId,
+                        active: active
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showAlert(`✅ Email account ${active ? 'activated' : 'deactivated'} successfully`, 'success');
+                    loadEmailAccounts(); // Refresh the list
+                } else {
+                    showAlert(`❌ Failed to update email account: ${data.message}`, 'danger');
+                }
+            } catch (error) {
+                console.error('Error updating email account:', error);
+                showAlert('❌ Error updating email account', 'danger');
+            }
+        }
+
+        async function updateDefaultEmailAccount() {
+            try {
+                const accountId = document.getElementById('default-email-account').value;
+                
+                const response = await fetch('/api/email-accounts/set-default', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        account_id: accountId
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showAlert(`✅ Default email account set to ${accountId}`, 'success');
+                    loadEmailAccounts(); // Refresh the list
+                } else {
+                    showAlert(`❌ Failed to set default account: ${data.message}`, 'danger');
+                }
+            } catch (error) {
+                console.error('Error setting default email account:', error);
+                showAlert('❌ Error setting default email account', 'danger');
+            }
         }
 
         // ==================== AI CONVERSATION SUMMARY ====================
