@@ -8,12 +8,7 @@ import sys
 from flask import Flask, render_template, request, jsonify
 import smtplib
 from email.message import EmailMessage
-import imaplib
-import email
-import re
 from datetime import datetime
-import threading
-import time
 import requests
 import json
 
