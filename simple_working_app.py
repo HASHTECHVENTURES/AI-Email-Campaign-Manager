@@ -669,6 +669,10 @@ def check_replies():
         return jsonify({'success': False, 'message': f'Error checking replies: {str(e)}'})
 
 
+# Vercel serverless function handler
+def handler(event, context):
+    return app
+
 if __name__ == '__main__':
     print("🚀 STARTING SIMPLE WORKING EMAIL SYSTEM...")
     print(f"📧 Email: {EMAIL}")
