@@ -249,8 +249,8 @@
                 </div>
                 <div class="col-md-2">
                     <div class="stats-card">
-                        <h3 id="fake-emails">0</h3>
-                        <p class="mb-0">Fake Emails</p>
+                        <h3 id="bounced-emails">0</h3>
+                        <p class="mb-0">Bounced Emails</p>
                     </div>
                 </div>
                 <div class="col-md-2">
@@ -829,14 +829,14 @@ Your Team</textarea>
                 
                 // Update validation stats in dashboard
                 const validEmailsElement = document.getElementById('valid-emails');
-                const fakeEmailsElement = document.getElementById('fake-emails');
+                const bouncedEmailsElement = document.getElementById('bounced-emails');
                 
                 if (validEmailsElement) {
                     validEmailsElement.textContent = stats.valid_emails || 0;
                 }
                 
-                if (fakeEmailsElement) {
-                    fakeEmailsElement.textContent = stats.fake_emails || 0;
+                if (bouncedEmailsElement) {
+                    bouncedEmailsElement.textContent = stats.bounced_emails || 0;
                 }
                 
                 // Update validation stats in validation tab
@@ -849,12 +849,12 @@ Your Team</textarea>
                                 <small>Valid Emails</small>
                             </div>
                             <div class="col-md-3">
-                                <h4 class="text-danger">${stats.fake_emails}</h4>
-                                <small>Fake Emails</small>
+                                <h4 class="text-danger">${stats.bounced_emails}</h4>
+                                <small>Bounced Emails</small>
                             </div>
                             <div class="col-md-3">
-                                <h4 class="text-warning">${stats.bounced_emails}</h4>
-                                <small>Bounced Emails</small>
+                                <h4 class="text-warning">${stats.fake_emails}</h4>
+                                <small>Fake Emails</small>
                             </div>
                             <div class="col-md-3">
                                 <h4 class="text-info">${stats.validation_rate}%</h4>
