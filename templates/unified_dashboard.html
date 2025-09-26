@@ -186,19 +186,6 @@
                         <i class="fas fa-paper-plane me-2"></i>Email Campaign
                     </button>
                 </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="replies-tab" data-bs-toggle="tab" data-bs-target="#replies" type="button" role="tab">
-                                <i class="fas fa-reply me-2"></i>Replies <span class="badge bg-danger" id="replies-count">0</span>
-                            </button>
-                        </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="analytics-tab" data-bs-toggle="tab" data-bs-target="#analytics" type="button" role="tab">
-                        <i class="fas fa-chart-line me-2"></i>Analytics
-                    </button>
-                    <button class="nav-link" id="settings-tab" data-bs-toggle="tab" data-bs-target="#settings" type="button" role="tab">
-                        <i class="fas fa-cog me-2"></i>Settings
-                    </button>
-                </li>
             </ul>
 
             <div class="tab-content" id="mainTabsContent">
@@ -353,224 +340,8 @@ Your Team</textarea>
                 </div>
             </div>
 
-                <!-- Replies Tab -->
-                <div class="tab-pane fade" id="replies" role="tabpanel">
-            <div class="row">
-                        <!-- Reply Management -->
-                        <div class="col-md-8">
-                    <div class="section-card">
-                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <h4 class="fw-bold mb-0">
-                                        <i class="fas fa-inbox me-2"></i>Email Replies
-                        </h4>
-                                <div>
-                                        <button class="btn btn-info btn-sm" onclick="checkForReplies()">
-                                            <i class="fas fa-sync me-1"></i>Check for Replies
-                                    </button>
-                                </div>
-                            </div>
-                                <div id="repliesList">
-                                    <div class="text-center text-muted py-4">
-                                        <i class="fas fa-inbox fa-3x mb-3"></i>
-                                        <p><strong>No replies yet</strong></p>
-                                        <p>Click "Check for Replies" to see emails from users who have responded to your campaigns.</p>
-                                    </div>
-                                </div>
-                    </div>
-                        </div>
-
-                        <!-- Manual Reply Actions -->
-                <div class="col-md-4">
-                    <div class="section-card">
-                                <h4 class="fw-bold mb-3">
-                                    <i class="fas fa-reply me-2"></i>Manual Reply
-                        </h4>
-                                <div class="mb-3">
-                                    <label class="form-label">Reply Style</label>
-                                    <select class="form-select" id="replyStyle" onchange="updateReplyStyle()">
-                                        <option value="professional">👔 Professional</option>
-                                        <option value="friendly">😊 Friendly</option>
-                                        <option value="consultative">🎯 Consultative</option>
-                                        <option value="enthusiastic">🚀 Enthusiastic</option>
-                                    </select>
-                                    <small class="text-muted">Choose your preferred reply style</small>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Quick Actions</label>
-                                    <div class="d-grid gap-2">
-                                        <button class="btn btn-outline-primary btn-sm" onclick="markAllAsRead()">
-                                            <i class="fas fa-check me-1"></i>Mark All as Read
-                                        </button>
-                                        <button class="btn btn-outline-warning btn-sm" onclick="removeDuplicateReplies()">
-                                            <i class="fas fa-trash me-1"></i>Remove Duplicates
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                    </div>
-                </div>
-            </div>
 
 
-                <!-- Analytics Tab -->
-                <div class="tab-pane fade" id="analytics" role="tabpanel">
-                    <!-- Analytics Header -->
-                    <div class="row mb-4">
-                        <div class="col-12">
-                    <div class="section-card">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <h4 class="fw-bold mb-1">
-                                            <i class="fas fa-chart-line me-2"></i>🔥 INSANE Analytics Dashboard
-                        </h4>
-                                        <p class="text-muted mb-0">Real-time insights and performance metrics that will blow your mind!</p>
-                                    </div>
-                                    <div>
-                                        <button class="btn btn-primary btn-sm me-2" onclick="refreshAnalytics()">
-                                            <i class="fas fa-sync me-1"></i>Refresh Data
-                                        </button>
-                                        <button class="btn btn-outline-primary btn-sm" onclick="exportAnalytics()">
-                                            <i class="fas fa-download me-1"></i>Export Report
-                                        </button>
-                                    </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                    <!-- Key Performance Indicators -->
-                    <div class="row mb-4">
-                        <div class="col-md-3">
-                            <div class="section-card text-center">
-                                <div class="display-6 fw-bold text-primary" id="total-campaigns">0</div>
-                                <h6 class="text-muted">Total Campaigns</h6>
-                                <small class="text-success">
-                                    <i class="fas fa-arrow-up me-1"></i>
-                                    <span id="campaigns-growth">+0%</span> this month
-                                </small>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="section-card text-center">
-                                <div class="display-6 fw-bold text-success" id="total-responses">0</div>
-                                <h6 class="text-muted">Total Responses</h6>
-                                <small class="text-success">
-                                    <i class="fas fa-arrow-up me-1"></i>
-                                    <span id="responses-growth">+0%</span> this week
-                                </small>
-                    </div>
-                </div>
-                        <div class="col-md-3">
-                            <div class="section-card text-center">
-                                <div class="display-6 fw-bold text-warning" id="ai-efficiency">0%</div>
-                                <h6 class="text-muted">AI Efficiency</h6>
-                                <small class="text-muted">
-                                    <i class="fas fa-robot me-1"></i>
-                                    <span id="ai-improvement">+0%</span> improvement
-                                </small>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="section-card text-center">
-                                <div class="display-6 fw-bold text-info" id="conversion-rate">0%</div>
-                                <h6 class="text-muted">Conversion Rate</h6>
-                                <small class="text-muted">
-                                    <i class="fas fa-chart-line me-1"></i>
-                                    <span id="conversion-trend">+0%</span> vs last month
-                                </small>
-            </div>
-        </div>
-    </div>
-
-                    <!-- AI Analytics Row -->
-                    <div class="row mb-4">
-                        <div class="col-md-6">
-                            <div class="section-card">
-                                <h5 class="fw-bold mb-3">
-                                    <i class="fas fa-robot me-2"></i>🤖 AI Performance Analytics
-                                </h5>
-                                <div class="row">
-                                    <div class="col-6">
-                                        <div class="bg-success bg-opacity-10 p-3 rounded mb-3">
-                                            <div class="d-flex justify-content-between">
-                                                <span>Successful AI Replies</span>
-                                                <strong class="text-success" id="ai-success-count">0</strong>
-                </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-6">
-                                        <div class="bg-danger bg-opacity-10 p-3 rounded mb-3">
-                                            <div class="d-flex justify-content-between">
-                                                <span>Failed AI Replies</span>
-                                                <strong class="text-danger" id="ai-failed-count">0</strong>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="alert alert-info">
-                                    <i class="fas fa-info-circle me-2"></i>
-                                    <strong>AI Analytics</strong> Data will appear here as you run campaigns and receive replies.
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="section-card">
-                                <h5 class="fw-bold mb-3">
-                                    <i class="fas fa-brain me-2"></i>🧠 Sentiment Analysis Insights
-                                </h5>
-                        <div class="mb-3">
-                                    <div class="d-flex justify-content-between mb-2">
-                                        <span>😊 Positive Responses</span>
-                                        <span class="fw-bold text-success" id="positive-sentiment">0%</span>
-                                    </div>
-                                    <div class="progress mb-3">
-                                        <div class="progress-bar bg-success" id="positive-bar" style="width: 0%"></div>
-                                    </div>
-                        </div>
-                        <div class="mb-3">
-                                    <div class="d-flex justify-content-between mb-2">
-                                        <span>😐 Neutral Responses</span>
-                                        <span class="fw-bold text-warning" id="neutral-sentiment">0%</span>
-                                    </div>
-                                    <div class="progress mb-3">
-                                        <div class="progress-bar bg-warning" id="neutral-bar" style="width: 0%"></div>
-                                    </div>
-                        </div>
-                        <div class="mb-3">
-                                    <div class="d-flex justify-content-between mb-2">
-                                        <span>😞 Negative Responses</span>
-                                        <span class="fw-bold text-danger" id="negative-sentiment">0%</span>
-                        </div>
-                                    <div class="progress mb-3">
-                                        <div class="progress-bar bg-danger" id="negative-bar" style="width: 0%"></div>
-                </div>
-                                </div>
-            </div>
-                        </div>
-                    </div>
-
-                    <!-- Real-time Activity Feed -->
-                    <div class="row">
-                        <div class="col-12">
-                            <div class="section-card">
-                                <h5 class="fw-bold mb-3">
-                                    <i class="fas fa-bolt me-2"></i>⚡ Real-time Activity Feed
-                                </h5>
-                                <div id="activity-feed" style="max-height: 300px; overflow-y: auto;">
-                                    <div class="text-center text-muted py-4">
-                                        <i class="fas fa-bolt fa-3x mb-3"></i>
-                                        <h5>Real-time Activity Feed</h5>
-                                        <p>Live updates will appear here as your AI system processes emails and generates responses.</p>
-                                        <small>Start a campaign to see real-time activity!</small>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                </div>
-            </div>
 
             <!-- Alerts -->
             <div id="alertContainer"></div>
@@ -589,25 +360,14 @@ Your Team</textarea>
         document.addEventListener('DOMContentLoaded', function() {
             loadContacts();
             loadCampaignStatus();
-            loadReplies();
             loadMonitoringStatus();
-            loadAnalyticsDashboard(); // Load INSANE analytics! 🔥
             setupEventListeners();
-            
-            // Auto-remove duplicates on page load
-            setTimeout(() => {
-                removeDuplicateRepliesQuietly();
-            }, 1000); // Remove duplicates after 1 second
             
             // Auto-start monitoring when page loads
             setTimeout(() => {
                 startEmailMonitoring();
             }, 2000); // Start after 2 seconds
             
-        // Auto-refresh analytics every 30 seconds
-        setInterval(() => {
-            loadAnalyticsDashboard();
-        }, 30000);
         
         // LIVE CONTINUOUS EMAIL MONITORING
         let liveMonitoringInterval;
@@ -1121,25 +881,6 @@ Your Team</textarea>
             }
         }
 
-        async function checkForReplies() {
-            try {
-                showAlert('Checking for replies...', 'info');
-                const response = await fetch('/api/email-monitoring/check-now', {
-                    method: 'POST'
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    showAlert(`Found ${result.replies_count} replies!`, 'success');
-                    loadReplies();
-                } else {
-                    showAlert(result.message, 'danger');
-                }
-            } catch (error) {
-                showAlert('Error checking for replies: ' + error.message, 'danger');
-            }
-        }
 
         async function manualCheckAndReply() {
             try {
@@ -1373,56 +1114,8 @@ Your Team</textarea>
             }
         }
 
-        async function markAllAsRead() {
-            try {
-                showAlert('Marking all replies as read...', 'info');
-                // Note: You'll need to implement this endpoint in your backend
-                showAlert('Mark as read functionality will be implemented in the backend', 'info');
-            } catch (error) {
-                showAlert('Error marking replies as read: ' + error.message, 'danger');
-            }
-        }
 
 
-        async function removeDuplicateReplies() {
-            if (!confirm('Remove duplicate replies? This will keep only unique emails.')) return;
-            
-            try {
-                showAlert('🔄 Removing duplicate replies...', 'info');
-                
-                const response = await fetch('/api/replies/remove-duplicates', {
-                    method: 'POST'
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    showAlert(`✅ Removed ${result.removed_count} duplicate replies! (${result.original_count} → ${result.current_count})`, 'success');
-                    loadReplies();
-                } else {
-                    showAlert(result.message, 'danger');
-                }
-            } catch (error) {
-                showAlert('Error removing duplicates: ' + error.message, 'danger');
-            }
-        }
-
-        async function removeDuplicateRepliesQuietly() {
-            try {
-                const response = await fetch('/api/replies/remove-duplicates', {
-                    method: 'POST'
-                });
-                
-                const result = await response.json();
-                
-                if (result.success && result.removed_count > 0) {
-                    console.log(`🗑️ Auto-removed ${result.removed_count} duplicate replies on page load`);
-                    loadReplies();
-                }
-            } catch (error) {
-                console.error('Error auto-removing duplicates:', error);
-            }
-        }
 
 
         async function retryFailedAI() {
@@ -1763,172 +1456,7 @@ Your Team</textarea>
             return badges[intent] || '<span class="badge bg-secondary">💬 Unknown</span>';
         }
 
-        // ==================== INSANE ANALYTICS FUNCTIONS ====================
 
-        async function loadAnalyticsDashboard() {
-            try {
-                const response = await fetch('/api/analytics/dashboard');
-                const data = await response.json();
-                
-                if (data.success !== false) {
-                    updateAnalyticsDisplay(data);
-                }
-            } catch (error) {
-                console.error('Error loading analytics:', error);
-            }
-        }
-
-        function updateAnalyticsDisplay(data) {
-            // Update KPIs with new data structure
-            const totalCampaignsElement = document.getElementById('total-campaigns');
-            if (totalCampaignsElement) {
-                totalCampaignsElement.textContent = data.total_contacts || 0;
-            }
-            
-            const totalResponsesElement = document.getElementById('total-responses');
-            if (totalResponsesElement) {
-                totalResponsesElement.textContent = data.replies || 0;
-            }
-            
-            const aiEfficiencyElement = document.getElementById('ai-efficiency');
-            if (aiEfficiencyElement) {
-                aiEfficiencyElement.textContent = data.success_rate + '%';
-            }
-            
-            const conversionRateElement = document.getElementById('conversion-rate');
-            if (conversionRateElement) {
-                conversionRateElement.textContent = data.success_rate + '%';
-            }
-            
-            // Update growth indicators with safe defaults
-            const campaignsGrowthElement = document.getElementById('campaigns-growth');
-            if (campaignsGrowthElement) {
-                campaignsGrowthElement.textContent = '+0%';
-            }
-            
-            const responsesGrowthElement = document.getElementById('responses-growth');
-            if (responsesGrowthElement) {
-                responsesGrowthElement.textContent = '+0%';
-            }
-            
-            const aiImprovementElement = document.getElementById('ai-improvement');
-            if (aiImprovementElement) {
-                aiImprovementElement.textContent = '+0%';
-            }
-            
-            const conversionTrendElement = document.getElementById('conversion-trend');
-            if (conversionTrendElement) {
-                conversionTrendElement.textContent = '+0%';
-            }
-            
-            // Update manual reply performance
-            const aiSuccessElement = document.getElementById('ai-success-count');
-            if (aiSuccessElement) {
-                aiSuccessElement.textContent = data.replies || 0;
-            }
-            
-            const aiFailedElement = document.getElementById('ai-failed-count');
-            if (aiFailedElement) {
-                aiFailedElement.textContent = data.failed_emails || 0;
-            }
-            
-            // Update sentiment analysis with safe defaults
-            const positiveSentimentElement = document.getElementById('positive-sentiment');
-            if (positiveSentimentElement) {
-                positiveSentimentElement.textContent = '50%';
-            }
-            
-            const neutralSentimentElement = document.getElementById('neutral-sentiment');
-            if (neutralSentimentElement) {
-                neutralSentimentElement.textContent = '30%';
-            }
-            
-            const negativeSentimentElement = document.getElementById('negative-sentiment');
-            if (negativeSentimentElement) {
-                negativeSentimentElement.textContent = '20%';
-            }
-            
-            const positiveBarElement = document.getElementById('positive-bar');
-            if (positiveBarElement) {
-                positiveBarElement.style.width = '50%';
-            }
-            
-            const neutralBarElement = document.getElementById('neutral-bar');
-            if (neutralBarElement) {
-                neutralBarElement.style.width = '30%';
-            }
-            
-            const negativeBarElement = document.getElementById('negative-bar');
-            if (negativeBarElement) {
-                negativeBarElement.style.width = '20%';
-            }
-            
-            // Update activity feed with safe data
-            try {
-                updateActivityFeed(data.activity_feed || []);
-            } catch (error) {
-                console.error('Error updating activity feed:', error);
-                const feed = document.getElementById('activity-feed');
-                if (feed) {
-                    feed.innerHTML = '<div class="text-muted">No recent activity</div>';
-                }
-            }
-        }
-
-        function updateActivityFeed(activities) {
-            try {
-                const feed = document.getElementById('activity-feed');
-                if (!feed) return;
-                
-                // Safety check for activities
-                if (!activities || !Array.isArray(activities)) {
-                    feed.innerHTML = '<div class="text-muted">No recent activity</div>';
-                    return;
-                }
-                
-                let html = '';
-                
-                activities.forEach(activity => {
-                const colorClass = activity.color === 'success' ? 'bg-success' : 
-                                 activity.color === 'info' ? 'bg-info' : 
-                                 activity.color === 'warning' ? 'bg-warning' : 'bg-primary';
-                
-                html += `
-                    <div class="d-flex align-items-center mb-3">
-                        <div class="${colorClass} rounded-circle p-2 me-3">
-                            <i class="fas fa-${activity.icon} text-white"></i>
-                        </div>
-                        <div>
-                            <strong>${activity.message}</strong>
-                            <br><small class="text-muted">${activity.time}</small>
-                        </div>
-                    </div>
-                `;
-            });
-            
-            feed.innerHTML = html;
-            } catch (error) {
-                console.error('Error in updateActivityFeed:', error);
-                const feed = document.getElementById('activity-feed');
-                if (feed) {
-                    feed.innerHTML = '<div class="text-muted">No recent activity</div>';
-                }
-            }
-        }
-
-        async function refreshAnalytics() {
-            showAlert('🔄 Refreshing analytics data...', 'info');
-            await loadAnalyticsDashboard();
-            showAlert('✅ Analytics refreshed!', 'success');
-        }
-
-        async function exportAnalytics() {
-            showAlert('📊 Exporting analytics report...', 'info');
-            // In a real implementation, this would generate and download a report
-            setTimeout(() => {
-                showAlert('✅ Analytics report exported! (Feature coming soon)', 'success');
-            }, 1000);
-        }
 
 
 
