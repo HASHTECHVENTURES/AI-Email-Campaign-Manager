@@ -240,7 +240,7 @@ def check_for_new_emails():
                             if sent_email['recipient'].lower() == sender_email.lower():
                                 original_email = sent_email
                                 is_reply = True
-                break
+                                break
         
                     if is_reply and original_email:
                         # Extract message content
