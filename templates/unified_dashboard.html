@@ -345,7 +345,6 @@ Your Team</textarea>
         // Global variables
         let contacts = [];
         let campaignStatus = {};
-        let replies = [];
         let monitoringStatus = false;
 
         // Initialize dashboard
@@ -757,24 +756,7 @@ Your Team</textarea>
         }, 5000);
 
         // Auto-refresh replies every 10 seconds when monitoring is active
-        setInterval(() => {
-            if (monitoringStatus) {
-                loadReplies();
-            }
-        }, 10000);
 
-        // Reply Management Functions
-        async function loadReplies() {
-            try {
-                const response = await fetch('/api/replies');
-                replies = await response.json();
-                updateRepliesDisplay();
-                updateRepliesCount();
-                updateManualReplyMetrics(); // Update manual reply metrics
-            } catch (error) {
-                console.error('Error loading replies:', error);
-            }
-        }
 
         async function loadMonitoringStatus() {
             try {
@@ -783,78 +765,12 @@ Your Team</textarea>
                 monitoringStatus = status.enabled;
                 updateMonitoringDisplay(status);
                 
-                // Auto-refresh replies when monitoring is active
-                if (monitoringStatus) {
-                    loadReplies();
-                }
             } catch (error) {
                 console.error('Error loading monitoring status:', error);
             }
         }
 
-        function updateRepliesDisplay() {
-            const container = document.getElementById('repliesList');
-            
-            if (replies.length === 0) {
-                container.innerHTML = `
-                    <div class="text-center text-muted py-4">
-                        <i class="fas fa-inbox fa-3x mb-3"></i>
-                        <p><strong>No replies yet</strong></p>
-                        <p>Click "Check for Replies" to see emails from users who have responded to your campaigns.</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            let html = '';
-            replies.forEach((reply, index) => {
-                const replyDate = new Date(reply.timestamp || reply.received_date).toLocaleString();
-                const replyContent = reply.content || reply.message || 'No content available';
-                
-                html += `
-                    <div class="card mb-3">
-                        <div class="card-header d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="mb-0">
-                                    <i class="fas fa-user me-2"></i>${reply.from_name || reply.from_email}
-                                </h6>
-                                <small class="text-muted">${reply.subject}</small>
-                            </div>
-                            <div>
-                                <small class="text-muted">${replyDate}</small>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <p class="mb-3">${replyContent}</p>
-                            <div class="d-flex justify-content-end">
-                                <button class="btn btn-sm btn-primary me-2" onclick="replyToEmail(${reply.id})">
-                                    <i class="fas fa-reply me-1"></i>Reply
-                                </button>
-                                <button class="btn btn-sm btn-outline-danger" onclick="deleteReply(${reply.id})">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            });
-            
-            container.innerHTML = html;
-        }
 
-        function updateRepliesCount() {
-            document.getElementById('replies-count').textContent = replies.length;
-        }
-
-        function replyToEmail(replyId) {
-            const reply = replies.find(r => r.id === replyId);
-            if (!reply) return;
-            
-            const replyText = prompt(`Reply to ${reply.from_name || reply.from_email}:\n\nEnter your reply message:`);
-            if (replyText && replyText.trim()) {
-                sendManualReply(replyId, replyText.trim());
-            }
-        }
 
         function updateMonitoringDisplay(status) {
             const statusElement = document.getElementById('monitoring-status');
@@ -886,13 +802,9 @@ Your Team</textarea>
                 if (checkResult.success && checkResult.replies_count > 0) {
                     showAlert(`✅ Found ${checkResult.replies_count} replies! Check the Replies tab to respond manually.`, 'success');
                     
-                    // Reload replies to show new ones
-                    await loadReplies();
-                    
                     // Give AI time to process and reply
                     setTimeout(() => {
                         showAlert('🤖 AI has processed replies and sent responses!', 'success');
-                        loadReplies(); // Refresh to show AI replies
                     }, 3000);
                     
                 } else {
@@ -947,162 +859,9 @@ Your Team</textarea>
             }
         }
 
-        function viewReply(replyId) {
-            const reply = replies.find(r => r.id === replyId);
-            if (reply) {
-                // Remove any existing modal first
-                const existingModal = document.getElementById('replyModal');
-                if (existingModal) {
-                    existingModal.remove();
-                }
-                
-                const modal = `
-                    <div class="modal fade" id="replyModal" tabindex="-1">
-                        <div class="modal-dialog modal-lg">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title">Reply from ${reply.from_name || reply.from_email}</h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                </div>
-                                <div class="modal-body">
-                                    <div class="mb-3">
-                                        <strong>Subject:</strong> ${reply.subject}
-                                    </div>
-                                    <div class="mb-3">
-                                        <strong>Received:</strong> ${new Date(reply.received_date).toLocaleString()}
-                                    </div>
-                                    <div class="mb-3">
-                                        <strong>Message:</strong>
-                                        <div class="border p-3 rounded" style="background: #f8f9fa;">
-                                            ${reply.message.replace(/\n/g, '<br>')}
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-primary" onclick="replyToEmail(${reply.id})">
-                                        <i class="fas fa-reply me-1"></i>Reply
-                                    </button>
-                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                
-                document.body.insertAdjacentHTML('beforeend', modal);
-                const modalElement = new bootstrap.Modal(document.getElementById('replyModal'));
-                modalElement.show();
-                
-                // Clean up modal after it's hidden
-                document.getElementById('replyModal').addEventListener('hidden.bs.modal', function() {
-                    this.remove();
-                });
-            }
-        }
 
-        function replyToEmail(replyId) {
-            const reply = replies.find(r => r.id === replyId);
-            if (reply) {
-                // Remove any existing modal first
-                const existingModal = document.getElementById('replyModal');
-                if (existingModal) {
-                    existingModal.remove();
-                }
-                
-                const modal = `
-                    <div class="modal fade" id="replyModal" tabindex="-1">
-                        <div class="modal-dialog modal-lg">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title">Reply to ${reply.from_name || reply.from_email}</h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                </div>
-                                <div class="modal-body">
-                                    <form id="replyForm">
-                                        <div class="mb-3">
-                                            <label class="form-label">To:</label>
-                                            <input type="email" class="form-control" value="${reply.from_email}" readonly>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label class="form-label">Subject:</label>
-                                            <input type="text" class="form-control" id="replySubject" value="Re: ${reply.subject}">
-                                        </div>
-                                        <div class="mb-3">
-                                            <label class="form-label">Message:</label>
-                                            <textarea class="form-control" id="replyMessage" rows="8" placeholder="Type your reply here..."></textarea>
-                                        </div>
-                                    </form>
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-primary" onclick="sendReply(${reply.id})">
-                                        <i class="fas fa-paper-plane me-1"></i>Send Reply
-                                    </button>
-                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                
-                document.body.insertAdjacentHTML('beforeend', modal);
-                const modalElement = new bootstrap.Modal(document.getElementById('replyModal'));
-                modalElement.show();
-                
-                // Clean up modal after it's hidden
-                document.getElementById('replyModal').addEventListener('hidden.bs.modal', function() {
-                    this.remove();
-                });
-            }
-        }
 
-        async function sendReply(replyId) {
-            const subject = document.getElementById('replySubject').value;
-            const message = document.getElementById('replyMessage').value;
-            const reply = replies.find(r => r.id === replyId);
-            
-            if (!subject || !message) {
-                showAlert('Please fill in all fields!', 'warning');
-                return;
-            }
-            
-            try {
-                const response = await fetch('/api/send-reply', {
-                method: 'POST',
-                headers: {
-                        'Content-Type': 'application/json'
-                },
-                    body: JSON.stringify({
-                        to_email: reply.from_email,
-                    subject: subject,
-                        message: message,
-                        reply_id: replyId
-                    })
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    showAlert('Reply sent successfully!', 'success');
-                    bootstrap.Modal.getInstance(document.getElementById('replyModal')).hide();
-                    loadReplies();
-                } else {
-                    showAlert(result.message, 'danger');
-                }
-            } catch (error) {
-                showAlert('Error sending reply: ' + error.message, 'danger');
-            }
-        }
 
-        async function deleteReply(replyId) {
-            if (!confirm('Are you sure you want to delete this reply?')) return;
-            
-            try {
-                // Note: You'll need to implement a delete endpoint in your backend
-                showAlert('Delete functionality will be implemented in the backend', 'info');
-            } catch (error) {
-                showAlert('Error deleting reply: ' + error.message, 'danger');
-            }
-        }
 
 
 
@@ -1122,7 +881,6 @@ Your Team</textarea>
                 
                 if (result.success) {
                     showAlert(`✅ Retry completed! ${result.success_count} succeeded, ${result.failed_count} failed`, 'success');
-                    loadReplies();
                 } else {
                     showAlert(result.message, 'danger');
                 }
@@ -1143,7 +901,6 @@ Your Team</textarea>
                 
                 if (result.success) {
                     showAlert('All replies cleared!', 'success');
-                    loadReplies();
                 } else {
                     showAlert(result.message, 'danger');
                 }
@@ -1227,7 +984,6 @@ Your Team</textarea>
                 
                 if (result.success) {
                     showAlert('✅ Manual reply sent successfully!', 'success');
-                    loadReplies();
                 } else {
                     showAlert(`❌ Manual reply failed: ${result.message}`, 'danger');
                 }
