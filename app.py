@@ -53,6 +53,9 @@ email_monitoring_active = False
 last_email_check = None
 monitoring_thread = None
 
+# AI Reply Control
+ai_replies_enabled = True
+
 # Email sending limits
 DAILY_EMAIL_LIMIT = 100  # Maximum emails per day
 HOURLY_EMAIL_LIMIT = 20  # Maximum emails per hour
@@ -473,8 +476,10 @@ def process_incoming_reply(sender_email, sender_name, subject, message_content):
     conversation['message_count'] += 1
     conversation['last_activity'] = datetime.now().isoformat()
     
-    # Generate AI response
-    ai_response = generate_ai_reply(message_content, sender_name, conversation['messages'])
+    # Generate AI response only if AI replies are enabled
+    ai_response = None
+    if ai_replies_enabled:
+        ai_response = generate_ai_reply(message_content, sender_name, conversation['messages'])
     
     if ai_response:
         # Add AI message to conversation
@@ -814,6 +819,26 @@ def check_emails_now():
             'success': False, 
             'message': f'Error checking emails: {str(e)}'
         })
+
+@app.route('/api/ai-replies/status')
+def get_ai_replies_status():
+    """Get AI replies status"""
+    return jsonify({
+        'ai_replies_enabled': ai_replies_enabled,
+        'status': 'enabled' if ai_replies_enabled else 'disabled'
+    })
+
+@app.route('/api/ai-replies/toggle', methods=['POST'])
+def toggle_ai_replies():
+    """Toggle AI replies on/off"""
+    global ai_replies_enabled
+    ai_replies_enabled = not ai_replies_enabled
+    
+    return jsonify({
+        'success': True,
+        'ai_replies_enabled': ai_replies_enabled,
+        'message': f'AI replies {"enabled" if ai_replies_enabled else "disabled"}'
+    })
 
 @app.route('/remove-contact', methods=['POST'])
 def remove_contact():

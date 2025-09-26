@@ -907,6 +907,19 @@ Your Team</textarea>
                                         Last check: Never
                                     </small>
                                 </div>
+                                
+                                <div class="mb-3">
+                                    <h6 class="fw-bold">AI Reply Control</h6>
+                                    <div class="mb-2">
+                                        <span id="ai-replies-status" class="badge bg-success">
+                                            <i class="fas fa-robot me-1"></i>Enabled
+                                        </span>
+                                    </div>
+                                    <button id="toggle-ai-replies" class="btn btn-warning btn-sm w-100" onclick="toggleAIReplies()">
+                                        <i class="fas fa-pause me-1"></i>Stop AI Replies
+                                    </button>
+                                </div>
+                                
                                 <small class="text-muted">✅ Email monitoring runs automatically every 30 seconds. No manual intervention needed!</small>
                             </div>
                         </div>
@@ -1014,6 +1027,7 @@ Your Team</textarea>
             loadContacts();
             loadCampaignStatus();
             loadMonitoringStatus();
+            loadAIRepliesStatus();
             loadEmailLimits();
             loadConversations();
             loadUnansweredEmails();
@@ -1823,6 +1837,53 @@ Your Team</textarea>
         }
         
         // Manual email checking removed - system is fully automatic
+        
+        async function toggleAIReplies() {
+            try {
+                const response = await fetch('/api/ai-replies/toggle', {
+                    method: 'POST'
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    updateAIRepliesStatus(result.ai_replies_enabled);
+                    showAlert(`✅ ${result.message}`, 'success');
+                } else {
+                    showAlert(`❌ ${result.message}`, 'danger');
+                }
+            } catch (error) {
+                console.error('Error toggling AI replies:', error);
+                showAlert('Error toggling AI replies', 'danger');
+            }
+        }
+        
+        function updateAIRepliesStatus(enabled) {
+            const statusElement = document.getElementById('ai-replies-status');
+            const buttonElement = document.getElementById('toggle-ai-replies');
+            
+            if (enabled) {
+                statusElement.innerHTML = '<i class="fas fa-robot me-1"></i>Enabled';
+                statusElement.className = 'badge bg-success';
+                buttonElement.innerHTML = '<i class="fas fa-pause me-1"></i>Stop AI Replies';
+                buttonElement.className = 'btn btn-warning btn-sm w-100';
+            } else {
+                statusElement.innerHTML = '<i class="fas fa-robot me-1"></i>Disabled';
+                statusElement.className = 'badge bg-danger';
+                buttonElement.innerHTML = '<i class="fas fa-play me-1"></i>Start AI Replies';
+                buttonElement.className = 'btn btn-success btn-sm w-100';
+            }
+        }
+        
+        async function loadAIRepliesStatus() {
+            try {
+                const response = await fetch('/api/ai-replies/status');
+                const status = await response.json();
+                updateAIRepliesStatus(status.ai_replies_enabled);
+            } catch (error) {
+                console.error('Error loading AI replies status:', error);
+            }
+        }
 
 
 
