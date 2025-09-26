@@ -132,6 +132,81 @@
         .loading.show {
             display: block;
         }
+        
+        /* Email Sending Progress Styles */
+        .email-progress {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .progress-container {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .email-item {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 10px;
+            margin: 5px 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.3s ease;
+        }
+        
+        .email-item.sending {
+            background: rgba(255, 193, 7, 0.2);
+            border-left: 4px solid #ffc107;
+        }
+        
+        .email-item.sent {
+            background: rgba(40, 167, 69, 0.2);
+            border-left: 4px solid #28a745;
+        }
+        
+        .email-item.failed {
+            background: rgba(220, 53, 69, 0.2);
+            border-left: 4px solid #dc3545;
+        }
+        
+        .email-status {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+        
+        .status-sending {
+            background: #ffc107;
+            color: #000;
+        }
+        
+        .status-sent {
+            background: #28a745;
+            color: #fff;
+        }
+        
+        .status-failed {
+            background: #dc3545;
+            color: #fff;
+        }
+        
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
     </style>
 </head>
 <body>
@@ -281,6 +356,53 @@
 
                 <!-- Campaign Tab -->
                 <div class="tab-pane fade" id="campaign" role="tabpanel">
+                    <!-- Email Progress Section (Hidden by default) -->
+                    <div id="emailProgress" class="email-progress" style="display: none;">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="mb-0">
+                                <i class="fas fa-paper-plane me-2"></i>Email Campaign Progress
+                            </h5>
+                            <button class="btn btn-sm btn-outline-light" onclick="hideEmailProgress()">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="progress-container">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span>Overall Progress</span>
+                                <span id="overallProgress">0/0</span>
+                            </div>
+                            <div class="progress mb-3" style="height: 8px;">
+                                <div id="progressBar" class="progress-bar bg-success" role="progressbar" style="width: 0%"></div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="text-center">
+                                        <div class="h4 mb-0" id="sentCount">0</div>
+                                        <small>Sent</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="text-center">
+                                        <div class="h4 mb-0" id="failedCount">0</div>
+                                        <small>Failed</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="text-center">
+                                        <div class="h4 mb-0" id="remainingCount">0</div>
+                                        <small>Remaining</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="emailList" class="mt-3" style="max-height: 300px; overflow-y: auto;">
+                            <!-- Individual email progress items will be added here -->
+                        </div>
+                    </div>
+                    
                     <div class="row">
                         <!-- Campaign Setup -->
                 <div class="col-md-6">
@@ -912,6 +1034,11 @@ Your Team</textarea>
                 
                 if (result.success) {
                     showAlert(result.message, 'success');
+                    
+                    // Initialize and start email progress monitoring
+                    initializeEmailProgress(contacts.length);
+                    startEmailProgressMonitoring();
+                    
                     loadContacts();
                     loadCampaignStatus();
                 } else {
@@ -1136,6 +1263,150 @@ Your Team</textarea>
 
 
 
+
+        // Email progress tracking variables
+        let emailProgress = {
+            total: 0,
+            sent: 0,
+            failed: 0,
+            remaining: 0,
+            emails: []
+        };
+
+        function initializeEmailProgress(totalEmails) {
+            emailProgress = {
+                total: totalEmails,
+                sent: 0,
+                failed: 0,
+                remaining: totalEmails,
+                emails: []
+            };
+            
+            // Create email items for each contact
+            emailProgress.emails = contacts.map(contact => ({
+                email: contact.email,
+                name: contact.first_name + ' ' + contact.last_name,
+                status: 'pending',
+                timestamp: null,
+                error: null
+            }));
+            
+            // Show progress section
+            document.getElementById('emailProgress').style.display = 'block';
+            updateEmailProgress();
+            renderEmailList();
+        }
+
+        function updateEmailProgress() {
+            const progress = emailProgress.total > 0 ? (emailProgress.sent + emailProgress.failed) / emailProgress.total * 100 : 0;
+            
+            document.getElementById('overallProgress').textContent = `${emailProgress.sent + emailProgress.failed}/${emailProgress.total}`;
+            document.getElementById('progressBar').style.width = `${progress}%`;
+            document.getElementById('sentCount').textContent = emailProgress.sent;
+            document.getElementById('failedCount').textContent = emailProgress.failed;
+            document.getElementById('remainingCount').textContent = emailProgress.remaining;
+        }
+
+        function renderEmailList() {
+            const emailList = document.getElementById('emailList');
+            emailList.innerHTML = '';
+            
+            emailProgress.emails.forEach((email, index) => {
+                const emailItem = document.createElement('div');
+                emailItem.className = `email-item ${email.status}`;
+                emailItem.id = `email-${index}`;
+                
+                let statusIcon = '';
+                let statusText = '';
+                let statusClass = '';
+                
+                switch(email.status) {
+                    case 'pending':
+                        statusIcon = '<i class="fas fa-clock"></i>';
+                        statusText = 'Pending';
+                        statusClass = 'status-pending';
+                        break;
+                    case 'sending':
+                        statusIcon = '<i class="fas fa-spinner fa-spin"></i>';
+                        statusText = 'Sending';
+                        statusClass = 'status-sending';
+                        break;
+                    case 'sent':
+                        statusIcon = '<i class="fas fa-check"></i>';
+                        statusText = 'Sent';
+                        statusClass = 'status-sent';
+                        break;
+                    case 'failed':
+                        statusIcon = '<i class="fas fa-times"></i>';
+                        statusText = 'Failed';
+                        statusClass = 'status-failed';
+                        break;
+                }
+                
+                emailItem.innerHTML = `
+                    <div class="d-flex align-items-center">
+                        <div class="me-3">
+                            ${statusIcon}
+                        </div>
+                        <div>
+                            <div class="fw-bold">${email.name}</div>
+                            <small class="text-muted">${email.email}</small>
+                            ${email.error ? `<div class="text-danger small">${email.error}</div>` : ''}
+                        </div>
+                    </div>
+                    <div>
+                        <span class="email-status ${statusClass}">${statusText}</span>
+                    </div>
+                `;
+                
+                emailList.appendChild(emailItem);
+            });
+        }
+
+        function updateEmailStatus(index, status, error = null) {
+            if (index >= 0 && index < emailProgress.emails.length) {
+                emailProgress.emails[index].status = status;
+                emailProgress.emails[index].timestamp = new Date().toISOString();
+                if (error) {
+                    emailProgress.emails[index].error = error;
+                }
+                
+                // Update counters
+                if (status === 'sent') {
+                    emailProgress.sent++;
+                    emailProgress.remaining--;
+                } else if (status === 'failed') {
+                    emailProgress.failed++;
+                    emailProgress.remaining--;
+                }
+                
+                updateEmailProgress();
+                renderEmailList();
+            }
+        }
+
+        function startEmailProgressMonitoring() {
+            // Simulate email sending with realistic delays
+            emailProgress.emails.forEach((email, index) => {
+                setTimeout(() => {
+                    updateEmailStatus(index, 'sending');
+                    
+                    // Simulate sending delay (1-3 seconds per email)
+                    const delay = Math.random() * 2000 + 1000;
+                    
+                    setTimeout(() => {
+                        // Simulate success/failure (90% success rate)
+                        const success = Math.random() > 0.1;
+                        updateEmailStatus(index, success ? 'sent' : 'failed', 
+                            success ? null : 'SMTP connection failed');
+                    }, delay);
+                }, index * 1000); // Stagger emails by 1 second
+            });
+        }
+
+        function hideEmailProgress() {
+            document.getElementById('emailProgress').style.display = 'none';
+        }
 
     </script>
 </body>
