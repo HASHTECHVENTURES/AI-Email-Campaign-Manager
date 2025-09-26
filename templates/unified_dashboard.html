@@ -935,11 +935,13 @@ Your Team</textarea>
                 const result = await response.json();
                 
                 if (result.success) {
-                    showAlert('Contact added successfully!', 'success');
+                    showAlert('✅ Contact added successfully!', 'success');
                     document.getElementById('addContactForm').reset();
-                    loadContacts();
+                    // Force reload contacts and campaign status
+                    await loadContacts();
+                    await loadCampaignStatus();
                 } else {
-                    showAlert(result.message, 'danger');
+                    showAlert(`❌ ${result.message}`, 'danger');
                 }
             } catch (error) {
                 showAlert('Error adding contact: ' + error.message, 'danger');

@@ -1055,13 +1055,21 @@ def add_contact():
     if existing_contact:
         return jsonify({'success': False, 'message': 'Contact with this email already exists'})
     
-    campaign_status['contacts'].append({
+    new_contact = {
         'email': email,
         'first_name': first_name,
         'last_name': last_name,
         'gender': gender or 'O',
         'status': 'Pending'
-    })
+    }
+    
+    campaign_status['contacts'].append(new_contact)
+    
+    # Debug: Print contact addition
+    print(f"🔧 CONTACT ADDED DEBUG:")
+    print(f"   Added contact: {new_contact}")
+    print(f"   Total contacts now: {len(campaign_status['contacts'])}")
+    print(f"   All contacts: {campaign_status['contacts']}")
     
     return jsonify({'success': True, 'message': 'Contact added successfully'})
 
@@ -1081,7 +1089,14 @@ def start_manual_campaign():
     """Start campaign with manually entered contacts"""
     global campaign_status
     
+    # Debug: Print campaign status
+    print(f"🔧 CAMPAIGN DEBUG:")
+    print(f"   Campaign status: {campaign_status}")
+    print(f"   Contacts in campaign: {campaign_status.get('contacts', [])}")
+    print(f"   Number of contacts: {len(campaign_status.get('contacts', []))}")
+    
     if 'contacts' not in campaign_status or not campaign_status['contacts']:
+        print(f"❌ No contacts found in campaign_status")
         return jsonify({'success': False, 'message': 'No contacts added yet'})
     
     subject = request.form.get('subject', 'Your Subject Here')
