@@ -1188,7 +1188,7 @@ Your Team</textarea>
                 replies = await response.json();
                 updateRepliesDisplay();
                 updateRepliesCount();
-                updateAIPerformanceMetrics(); // Update AI metrics
+                updateManualReplyMetrics(); // Update manual reply metrics
             } catch (error) {
                 console.error('Error loading replies:', error);
             }
@@ -1874,19 +1874,17 @@ Your Team</textarea>
             // In a real implementation, this would save the preference
         }
 
-        function updateAIPerformanceMetrics() {
-            // Calculate AI performance metrics
-            const aiReplies = replies.filter(r => r.ai_auto_replied);
+        function updateManualReplyMetrics() {
+            // Calculate manual reply metrics
+            const manualReplies = replies.filter(r => r.manual_reply_sent);
             const totalReplies = replies.length;
-            const successRate = totalReplies > 0 ? Math.round((aiReplies.length / totalReplies) * 100) : 0;
+            const replyRate = totalReplies > 0 ? Math.round((manualReplies.length / totalReplies) * 100) : 0;
             
             // Update UI
-            document.getElementById('ai-success-rate').textContent = `${successRate}%`;
-            document.getElementById('ai-conversations').textContent = aiReplies.length;
-            
-            // Simulate response time (in real app, this would be tracked)
-            const avgResponseTime = (Math.random() * 2 + 0.5).toFixed(1);
-            document.getElementById('ai-response-time').textContent = `${avgResponseTime}s`;
+            const manualRepliesElement = document.getElementById('manual-replies');
+            if (manualRepliesElement) {
+                manualRepliesElement.textContent = manualReplies.length;
+            }
         }
 
         function getPersonalityIcon(personality) {

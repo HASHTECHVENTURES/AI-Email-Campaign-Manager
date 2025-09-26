@@ -223,6 +223,91 @@ def send_manual_reply():
         print(f"❌ MANUAL REPLY FAILED TO: {original_reply['from_email']} - {str(e)}")
         return jsonify({'success': False, 'message': f'Error sending reply: {str(e)}'})
 
+@app.route('/api/email-monitoring/status')
+def get_monitoring_status():
+    """Get email monitoring status"""
+    return jsonify({
+        'monitoring': monitoring_active,
+        'status': 'active' if monitoring_active else 'inactive'
+    })
+
+@app.route('/api/email-monitoring/start', methods=['POST'])
+def start_monitoring():
+    """Start email monitoring"""
+    global monitoring_active
+    monitoring_active = True
+    print("📧 EMAIL MONITORING STARTED")
+    return jsonify({'success': True, 'message': 'Email monitoring started'})
+
+@app.route('/api/email-monitoring/stop', methods=['POST'])
+def stop_monitoring():
+    """Stop email monitoring"""
+    global monitoring_active
+    monitoring_active = False
+    print("📧 EMAIL MONITORING STOPPED")
+    return jsonify({'success': True, 'message': 'Email monitoring stopped'})
+
+@app.route('/api/analytics/dashboard')
+def get_analytics():
+    """Get analytics data"""
+    sent_count = len([c for c in contacts if c['status'] == 'Sent'])
+    failed_count = len([c for c in contacts if c['status'] == 'Failed'])
+    reply_count = len(replies)
+    
+    return jsonify({
+        'total_contacts': len(contacts),
+        'sent_emails': sent_count,
+        'failed_emails': failed_count,
+        'replies': reply_count,
+        'success_rate': round((sent_count / len(contacts) * 100) if contacts else 0, 1)
+    })
+
+@app.route('/api/email-accounts')
+def get_email_accounts():
+    """Get email accounts"""
+    return jsonify([{
+        'id': 1,
+        'email': EMAIL,
+        'name': 'Primary Account',
+        'status': 'active',
+        'is_default': True
+    }])
+
+@app.route('/api/replies/remove-duplicates', methods=['POST'])
+def remove_duplicates():
+    """Remove duplicate replies"""
+    global replies
+    
+    original_count = len(replies)
+    seen_emails = set()
+    unique_replies = []
+    
+    for reply in replies:
+        email_key = f"{reply['from_email']}_{reply['subject']}"
+        if email_key not in seen_emails:
+            seen_emails.add(email_key)
+            unique_replies.append(reply)
+    
+    removed_count = original_count - len(unique_replies)
+    replies = unique_replies
+    
+    print(f"🗑️ REMOVED {removed_count} DUPLICATE REPLIES")
+    
+    return jsonify({
+        'success': True,
+        'removed_count': removed_count,
+        'original_count': original_count,
+        'current_count': len(replies)
+    })
+
+@app.route('/api/replies/clear', methods=['POST'])
+def clear_replies():
+    """Clear all replies"""
+    global replies
+    replies = []
+    print("🗑️ ALL REPLIES CLEARED")
+    return jsonify({'success': True, 'message': 'All replies cleared'})
+
 @app.route('/api/email-monitoring/check-now', methods=['POST'])
 def check_replies():
     """Check for replies manually"""
