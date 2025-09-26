@@ -710,11 +710,26 @@
                     
                     <div class="row">
                         <!-- Campaign Setup -->
-                <div class="col-md-6">
+                        <div class="col-md-6">
                     <div class="section-card">
                                 <h4 class="fw-bold mb-3">
                                     <i class="fas fa-cog me-2"></i>Campaign Setup
-                        </h4>
+                                </h4>
+                                
+                                <!-- AI Reply Control - Main Dashboard -->
+                                <div class="mb-3 p-3 bg-light rounded">
+                                    <h6 class="fw-bold mb-2">
+                                        <i class="fas fa-robot me-2"></i>AI Reply Control
+                                    </h6>
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <span id="ai-replies-status-main" class="badge bg-success">
+                                            <i class="fas fa-robot me-1"></i>Enabled
+                                        </span>
+                                        <button id="toggle-ai-replies-main" class="btn btn-warning btn-sm" onclick="toggleAIReplies()">
+                                            <i class="fas fa-pause me-1"></i>Stop AI
+                                        </button>
+                                    </div>
+                                </div>
                                 <div class="alert alert-warning mb-3">
                                     <i class="fas fa-exclamation-triangle me-2"></i>
                                     <strong>Step 1:</strong> Add contacts first, then start your campaign!
@@ -1859,19 +1874,54 @@ Your Team</textarea>
         }
         
         function updateAIRepliesStatus(enabled) {
+            // Update main dashboard button
+            const statusElementMain = document.getElementById('ai-replies-status-main');
+            const buttonElementMain = document.getElementById('toggle-ai-replies-main');
+            
+            // Update AI conversations tab button
             const statusElement = document.getElementById('ai-replies-status');
             const buttonElement = document.getElementById('toggle-ai-replies');
             
             if (enabled) {
-                statusElement.innerHTML = '<i class="fas fa-robot me-1"></i>Enabled';
-                statusElement.className = 'badge bg-success';
-                buttonElement.innerHTML = '<i class="fas fa-pause me-1"></i>Stop AI Replies';
-                buttonElement.className = 'btn btn-warning btn-sm w-100';
+                // Main dashboard
+                if (statusElementMain) {
+                    statusElementMain.innerHTML = '<i class="fas fa-robot me-1"></i>Enabled';
+                    statusElementMain.className = 'badge bg-success';
+                }
+                if (buttonElementMain) {
+                    buttonElementMain.innerHTML = '<i class="fas fa-pause me-1"></i>Stop AI';
+                    buttonElementMain.className = 'btn btn-warning btn-sm';
+                }
+                
+                // AI conversations tab
+                if (statusElement) {
+                    statusElement.innerHTML = '<i class="fas fa-robot me-1"></i>Enabled';
+                    statusElement.className = 'badge bg-success';
+                }
+                if (buttonElement) {
+                    buttonElement.innerHTML = '<i class="fas fa-pause me-1"></i>Stop AI Replies';
+                    buttonElement.className = 'btn btn-warning btn-sm w-100';
+                }
             } else {
-                statusElement.innerHTML = '<i class="fas fa-robot me-1"></i>Disabled';
-                statusElement.className = 'badge bg-danger';
-                buttonElement.innerHTML = '<i class="fas fa-play me-1"></i>Start AI Replies';
-                buttonElement.className = 'btn btn-success btn-sm w-100';
+                // Main dashboard
+                if (statusElementMain) {
+                    statusElementMain.innerHTML = '<i class="fas fa-robot me-1"></i>Disabled';
+                    statusElementMain.className = 'badge bg-danger';
+                }
+                if (buttonElementMain) {
+                    buttonElementMain.innerHTML = '<i class="fas fa-play me-1"></i>Start AI';
+                    buttonElementMain.className = 'btn btn-success btn-sm';
+                }
+                
+                // AI conversations tab
+                if (statusElement) {
+                    statusElement.innerHTML = '<i class="fas fa-robot me-1"></i>Disabled';
+                    statusElement.className = 'badge bg-danger';
+                }
+                if (buttonElement) {
+                    buttonElement.innerHTML = '<i class="fas fa-play me-1"></i>Start AI Replies';
+                    buttonElement.className = 'btn btn-success btn-sm w-100';
+                }
             }
         }
         
