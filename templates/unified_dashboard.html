@@ -434,6 +434,39 @@
                         <div id="emailList" class="mt-3" style="max-height: 300px; overflow-y: auto;">
                             <!-- Individual email progress items will be added here -->
                         </div>
+                        
+                        <!-- Campaign Results Summary -->
+                        <div class="mt-4 p-3 bg-light rounded">
+                            <h6 class="fw-bold mb-3">
+                                <i class="fas fa-chart-pie me-2"></i>Campaign Results Summary
+                            </h6>
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="text-center">
+                                        <div class="h5 text-success" id="totalSentSummary">0</div>
+                                        <small>Successfully Sent</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="text-center">
+                                        <div class="h5 text-danger" id="totalBouncedSummary">0</div>
+                                        <small>Bounced Emails</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="text-center">
+                                        <div class="h5 text-warning" id="totalFailedSummary">0</div>
+                                        <small>Failed to Send</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="text-center">
+                                        <div class="h5 text-info" id="deliveryRateSummary">0%</div>
+                                        <small>Delivery Rate</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     
                     <div class="row">
@@ -1168,21 +1201,125 @@ Your Team</textarea>
                 if (result.success) {
                     showAlert(result.message, 'success');
                     
-                    // Initialize and start email progress monitoring
-                    initializeEmailProgress(contacts.length);
-                    startEmailProgressMonitoring();
+                    // Initialize real-time email progress
+                    initializeRealTimeEmailProgress(contacts.length);
                     
-                    loadContacts();
-                    loadCampaignStatus();
+                    // Start real-time email sending
+                    startRealTimeEmailSending(subject, message);
+                    
                 } else {
                     showAlert(result.message, 'danger');
+                    document.getElementById('startCampaignBtn').disabled = false;
+                    document.getElementById('startCampaignBtn').innerHTML = '<i class="fas fa-paper-plane me-2"></i>Start Email Campaign';
                 }
             } catch (error) {
                 showAlert('Error starting campaign: ' + error.message, 'danger');
-            } finally {
                 document.getElementById('startCampaignBtn').disabled = false;
                 document.getElementById('startCampaignBtn').innerHTML = '<i class="fas fa-paper-plane me-2"></i>Start Email Campaign';
             }
+        }
+
+        function initializeRealTimeEmailProgress(totalEmails) {
+            emailProgress = {
+                total: totalEmails,
+                sent: 0,
+                failed: 0,
+                remaining: totalEmails,
+                emails: []
+            };
+            
+            // Create email items for each contact
+            emailProgress.emails = contacts.map(contact => ({
+                email: contact.email,
+                name: contact.first_name + ' ' + contact.last_name,
+                status: 'pending',
+                timestamp: null,
+                error: null
+            }));
+            
+            // Show progress section
+            document.getElementById('emailProgress').style.display = 'block';
+            updateEmailProgress();
+            renderEmailList();
+        }
+
+        async function startRealTimeEmailSending(subject, message) {
+            let currentIndex = 0;
+            
+            while (currentIndex < emailProgress.emails.length) {
+                // Update status to sending
+                emailProgress.emails[currentIndex].status = 'sending';
+                renderEmailList();
+                
+                try {
+                    const response = await fetch('/api/send-next-email', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            subject: subject,
+                            message: message
+                        })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        if (result.completed) {
+                            // All emails processed
+                            showAlert('✅ Campaign completed!', 'success');
+                            document.getElementById('startCampaignBtn').disabled = false;
+                            document.getElementById('startCampaignBtn').innerHTML = '<i class="fas fa-paper-plane me-2"></i>Start Email Campaign';
+                            break;
+                        } else {
+                            // Update progress
+                            const contactIndex = result.contact_index;
+                            if (contactIndex >= 0 && contactIndex < emailProgress.emails.length) {
+                                if (result.status === 'sent') {
+                                    emailProgress.emails[contactIndex].status = 'sent';
+                                    emailProgress.sent++;
+                                    emailProgress.remaining--;
+                                } else if (result.status === 'failed') {
+                                    emailProgress.emails[contactIndex].status = 'failed';
+                                    emailProgress.emails[contactIndex].error = result.error || 'Send failed';
+                                    emailProgress.failed++;
+                                    emailProgress.remaining--;
+                                }
+                                
+                                updateEmailProgress();
+                                renderEmailList();
+                                
+                                // Show result message
+                                if (result.message) {
+                                    console.log(result.message);
+                                }
+                            }
+                        }
+                    }
+                    
+                } catch (error) {
+                    // Mark as failed
+                    emailProgress.emails[currentIndex].status = 'failed';
+                    emailProgress.emails[currentIndex].error = 'Network error';
+                    emailProgress.failed++;
+                    emailProgress.remaining--;
+                    
+                    updateEmailProgress();
+                    renderEmailList();
+                }
+                
+                // Wait 1 second between emails
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                currentIndex++;
+            }
+            
+            // Final update
+            await loadContacts();
+            await loadEmailStats();
+            await loadBouncedEmails();
+            
+            showAlert(`📊 Campaign finished! Sent: ${emailProgress.sent}, Failed: ${emailProgress.failed}`, 'info');
         }
 
         async function resetCampaign() {
@@ -1441,12 +1578,24 @@ Your Team</textarea>
 
         function updateEmailProgress() {
             const progress = emailProgress.total > 0 ? (emailProgress.sent + emailProgress.failed) / emailProgress.total * 100 : 0;
+            const deliveryRate = emailProgress.total > 0 ? (emailProgress.sent / emailProgress.total * 100).toFixed(1) : 0;
             
             document.getElementById('overallProgress').textContent = `${emailProgress.sent + emailProgress.failed}/${emailProgress.total}`;
             document.getElementById('progressBar').style.width = `${progress}%`;
             document.getElementById('sentCount').textContent = emailProgress.sent;
             document.getElementById('failedCount').textContent = emailProgress.failed;
             document.getElementById('remainingCount').textContent = emailProgress.remaining;
+            
+            // Update summary section
+            const totalSentSummary = document.getElementById('totalSentSummary');
+            const totalBouncedSummary = document.getElementById('totalBouncedSummary');
+            const totalFailedSummary = document.getElementById('totalFailedSummary');
+            const deliveryRateSummary = document.getElementById('deliveryRateSummary');
+            
+            if (totalSentSummary) totalSentSummary.textContent = emailProgress.sent;
+            if (totalBouncedSummary) totalBouncedSummary.textContent = bounced_emails ? bounced_emails.length : 0;
+            if (totalFailedSummary) totalFailedSummary.textContent = emailProgress.failed;
+            if (deliveryRateSummary) deliveryRateSummary.textContent = `${deliveryRate}%`;
         }
 
         function renderEmailList() {

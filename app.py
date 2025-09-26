@@ -371,81 +371,142 @@ def add_contact_api():
 
 @app.route('/start-manual-campaign', methods=['POST'])
 def start_campaign():
-    """Start email campaign"""
+    """Start email campaign with real-time progress"""
     global contacts, sent_emails
     
     if not contacts:
         return jsonify({'success': False, 'message': 'No contacts added yet'})
     
-    subject = request.form.get('subject', 'Your Email Campaign')
-    message = request.form.get('message', 'Hello! This is our email campaign.')
+    # Return immediately to allow real-time progress
+    unsent_contacts = [c for c in contacts if c.get('status') != 'Sent']
     
-    sent_count = 0
-    failed_count = 0
+    return jsonify({
+        'success': True, 
+        'message': f'Campaign started! Processing {len(unsent_contacts)} contacts.',
+        'total_contacts': len(unsent_contacts)
+    })
+
+@app.route('/api/send-next-email', methods=['POST'])
+def send_next_email():
+    """Send next email in queue with real-time progress"""
+    global contacts
     
-    for contact in contacts:
-        if contact['status'] != 'Sent':
-            try:
-                # Create email
-                msg = EmailMessage()
-                msg['From'] = EMAIL
-                msg['To'] = contact['email']
-                msg['Subject'] = subject
-                
-                email_content = f"""Dear {contact['first_name']},
+    data = request.get_json()
+    subject = data.get('subject', 'Your Email Campaign')
+    message = data.get('message', 'Hello! This is our email campaign.')
+    
+    # Find next unsent contact
+    next_contact = None
+    contact_index = -1
+    
+    for i, contact in enumerate(contacts):
+        if contact.get('status') != 'Sent' and contact.get('status') != 'Failed':
+            next_contact = contact
+            contact_index = i
+            break
+    
+    if not next_contact:
+        return jsonify({
+            'success': True,
+            'completed': True,
+            'message': 'All emails processed!'
+        })
+    
+    try:
+        # Create email
+        msg = EmailMessage()
+        msg['From'] = EMAIL
+        msg['To'] = next_contact['email']
+        msg['Subject'] = subject
+        
+        email_content = f"""Dear {next_contact['first_name']},
 
 {message}
 
 Best regards,
 Your Team"""
+        
+        msg.set_content(email_content)
+        
+        # Send email with bounce detection
+        try:
+            with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+                server.starttls()
+                server.login(EMAIL, PASSWORD)
+                server.send_message(msg)
                 
-                msg.set_content(email_content)
-                
-                # Send email with bounce detection
-                try:
-                    with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
-                        server.starttls()
-                        server.login(EMAIL, PASSWORD)
-                        server.send_message(msg)
-                        
-                    # Mark as sent
-                    contact['status'] = 'Sent'
-                    contact['sent_date'] = datetime.now().isoformat()
-                    
-                    # Track email
-                    track_email_sent(contact['email'], subject, "Campaign")
-                    
-                    sent_count += 1
-                    
-                except smtplib.SMTPRecipientsRefused as e:
-                    error_msg = str(e)
-                    print(f"❌ Recipients refused for {contact['email']}: {error_msg}")
-                    detect_bounce_from_smtp_error(contact['email'], f"Recipients refused: {error_msg}")
-                    failed_count += 1
-                    continue
-                except smtplib.SMTPResponseException as e:
-                    error_msg = f"SMTP {e.smtp_code}: {e.smtp_error.decode() if hasattr(e.smtp_error, 'decode') else str(e.smtp_error)}"
-                    print(f"❌ SMTP error for {contact['email']}: {error_msg}")
-                    detect_bounce_from_smtp_error(contact['email'], error_msg)
-                    failed_count += 1
-                    continue
-                except Exception as e:
-                    error_msg = str(e)
-                    print(f"❌ Failed to send email to {contact['email']}: {error_msg}")
-                    if any(keyword in error_msg.lower() for keyword in ['user unknown', 'mailbox', 'recipient', 'invalid', 'refused']):
-                        detect_bounce_from_smtp_error(contact['email'], error_msg)
-                    failed_count += 1
-                    continue
-                    
-            except Exception as e:
-                contact['status'] = 'Failed'
-                failed_count += 1
-                print(f"❌ Unexpected error for {contact['email']}: {e}")
-    
-    return jsonify({
-        'success': True, 
-        'message': f'Campaign completed! Sent {sent_count} emails, {failed_count} failed.'
-    })
+            # Mark as sent
+            next_contact['status'] = 'Sent'
+            next_contact['sent_date'] = datetime.now().isoformat()
+            
+            # Track email
+            track_email_sent(next_contact['email'], subject, "Campaign")
+            
+            return jsonify({
+                'success': True,
+                'completed': False,
+                'contact_index': contact_index,
+                'contact_email': next_contact['email'],
+                'contact_name': f"{next_contact['first_name']} {next_contact['last_name']}",
+                'status': 'sent',
+                'message': f'✅ Email sent to {next_contact["first_name"]}'
+            })
+            
+        except smtplib.SMTPRecipientsRefused as e:
+            error_msg = str(e)
+            detect_bounce_from_smtp_error(next_contact['email'], f"Recipients refused: {error_msg}")
+            next_contact['status'] = 'Failed'
+            
+            return jsonify({
+                'success': True,
+                'completed': False,
+                'contact_index': contact_index,
+                'contact_email': next_contact['email'],
+                'contact_name': f"{next_contact['first_name']} {next_contact['last_name']}",
+                'status': 'failed',
+                'error': 'Recipients refused - Email bounced',
+                'message': f'🚫 Email bounced: {next_contact["first_name"]} - Recipients refused'
+            })
+            
+        except smtplib.SMTPResponseException as e:
+            error_msg = f"SMTP {e.smtp_code}: {e.smtp_error.decode() if hasattr(e.smtp_error, 'decode') else str(e.smtp_error)}"
+            detect_bounce_from_smtp_error(next_contact['email'], error_msg)
+            next_contact['status'] = 'Failed'
+            
+            return jsonify({
+                'success': True,
+                'completed': False,
+                'contact_index': contact_index,
+                'contact_email': next_contact['email'],
+                'contact_name': f"{next_contact['first_name']} {next_contact['last_name']}",
+                'status': 'failed',
+                'error': f'SMTP Error {e.smtp_code} - Email bounced',
+                'message': f'🚫 Email bounced: {next_contact["first_name"]} - SMTP {e.smtp_code}'
+            })
+            
+        except Exception as e:
+            error_msg = str(e)
+            if any(keyword in error_msg.lower() for keyword in ['user unknown', 'mailbox', 'recipient', 'invalid', 'refused']):
+                detect_bounce_from_smtp_error(next_contact['email'], error_msg)
+            next_contact['status'] = 'Failed'
+            
+            return jsonify({
+                'success': True,
+                'completed': False,
+                'contact_index': contact_index,
+                'contact_email': next_contact['email'],
+                'contact_name': f"{next_contact['first_name']} {next_contact['last_name']}",
+                'status': 'failed',
+                'error': 'Send failed',
+                'message': f'❌ Failed: {next_contact["first_name"]} - {error_msg[:50]}'
+            })
+            
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'completed': False,
+            'message': f'Unexpected error: {str(e)}'
+        })
 
 @app.route('/api/status')
 def get_status():
