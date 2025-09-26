@@ -1033,6 +1033,73 @@ def get_contacts():
     contacts = campaign_status.get('contacts', [])
     return jsonify(contacts)
 
+@app.route('/upload-bulk-contacts', methods=['POST'])
+def upload_bulk_contacts():
+    """Upload bulk contacts from Excel/CSV file"""
+    global campaign_status
+    
+    try:
+        if 'file' not in request.files:
+            return jsonify({'success': False, 'message': 'No file uploaded'})
+        
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({'success': False, 'message': 'No file selected'})
+        
+        # Read the file based on extension
+        filename = file.filename.lower()
+        if filename.endswith('.csv'):
+            df = pd.read_csv(file)
+        elif filename.endswith(('.xlsx', '.xls')):
+            df = pd.read_excel(file)
+        else:
+            return jsonify({'success': False, 'message': 'Unsupported file format. Use CSV, XLS, or XLSX'})
+        
+        # Ensure required columns exist
+        required_columns = ['Email', 'First Name', 'Last Name']
+        missing_columns = [col for col in required_columns if col not in df.columns]
+        if missing_columns:
+            return jsonify({'success': False, 'message': f'Missing columns: {", ".join(missing_columns)}'})
+        
+        # Initialize contacts if not exists
+        if 'contacts' not in campaign_status:
+            campaign_status['contacts'] = []
+        
+        # Add contacts from file
+        added_count = 0
+        for _, row in df.iterrows():
+            email = str(row['Email']).strip()
+            first_name = str(row['First Name']).strip()
+            last_name = str(row['Last Name']).strip()
+            
+            # Skip if email is empty or invalid
+            if not email or '@' not in email:
+                continue
+            
+            # Check if contact already exists
+            existing_contact = next((c for c in campaign_status['contacts'] if c['email'].lower() == email.lower()), None)
+            if existing_contact:
+                continue
+            
+            # Add new contact
+            new_contact = {
+                'email': email,
+                'first_name': first_name,
+                'last_name': last_name,
+                'gender': 'O',  # Default gender
+                'status': 'Pending'
+            }
+            
+            campaign_status['contacts'].append(new_contact)
+            added_count += 1
+        
+        print(f"✅ BULK UPLOAD: Added {added_count} contacts from {filename}")
+        return jsonify({'success': True, 'message': f'Successfully uploaded {added_count} contacts', 'count': added_count})
+        
+    except Exception as e:
+        print(f"❌ BULK UPLOAD ERROR: {str(e)}")
+        return jsonify({'success': False, 'message': f'Error processing file: {str(e)}'})
+
 @app.route('/add-contact', methods=['POST'])
 def add_contact():
     """Add a single contact to the campaign"""
