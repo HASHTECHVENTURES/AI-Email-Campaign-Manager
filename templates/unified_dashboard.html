@@ -367,8 +367,8 @@ Your Team</textarea>
                                         <span class="badge bg-success me-2">
                                             <i class="fas fa-check me-1"></i>Auto-Monitoring Active
                                         </span>
-                                        <span class="badge bg-success me-2">
-                                            <i class="fas fa-robot me-1"></i>AI Agent Auto-Active
+                                        <span class="badge bg-info me-2">
+                                            <i class="fas fa-user me-1"></i>Manual Reply Mode
                                         </span>
                                         <span class="badge bg-success me-2" id="live-status">
                                             <i class="fas fa-circle me-1 blink"></i>LIVE MONITORING
@@ -377,7 +377,7 @@ Your Team</textarea>
                                             <i class="fas fa-sync me-1"></i>Refresh Now
                                     </button>
                                         <button class="btn btn-success btn-sm ms-2" onclick="manualCheckAndReply()">
-                                            <i class="fas fa-robot me-1"></i>AI Check & Reply
+                                            <i class="fas fa-reply me-1"></i>Check & Reply
                                     </button>
                                 </div>
                             </div>
@@ -409,18 +409,17 @@ Your Team</textarea>
                                     <small class="text-muted" id="last-check">Never</small>
                         </div>
                                 <div class="mb-3">
-                                    <label class="form-label">AI Personality</label>
-                                    <select class="form-select" id="aiPersonality" onchange="updateAIPersonality()">
-                                        <option value="auto">🤖 Smart Auto-Select</option>
+                                    <label class="form-label">Reply Style</label>
+                                    <select class="form-select" id="replyStyle" onchange="updateReplyStyle()">
                                         <option value="professional">👔 Professional</option>
                                         <option value="friendly">😊 Friendly</option>
                                         <option value="consultative">🎯 Consultative</option>
                                         <option value="enthusiastic">🚀 Enthusiastic</option>
                                     </select>
-                                    <small class="text-muted">AI automatically selects the best personality for each contact</small>
+                                    <small class="text-muted">Choose your preferred reply style for manual responses</small>
                                 </div>
                                 <div class="mb-3">
-                                    <label class="form-label">AI Performance</label>
+                                    <label class="form-label">Reply Performance</label>
                                     <div class="row text-center">
                                         <div class="col-4">
                                             <div class="bg-success bg-opacity-10 p-2 rounded">
@@ -788,7 +787,7 @@ Your Team</textarea>
             isLiveMonitoring = true;
             
             // NO AUTOMATIC INTERVALS - Only manual checks
-            // User can click "Refresh Now" or "AI Check & Reply" when needed
+            // User can click "Refresh Now" or "Check & Reply" when needed
             
             // Update status indicator
             const liveStatus = document.getElementById('live-status');
@@ -1868,9 +1867,9 @@ Your Team</textarea>
 
         // ==================== SUPER SMART AI FUNCTIONS ====================
 
-        function updateAIPersonality() {
-            const personality = document.getElementById('aiPersonality').value;
-            showAlert(`🤖 AI Personality updated to: ${personality}`, 'info');
+        function updateReplyStyle() {
+            const style = document.getElementById('replyStyle').value;
+            showAlert(`📝 Reply style updated to: ${style}`, 'info');
             // In a real implementation, this would save the preference
         }
 
