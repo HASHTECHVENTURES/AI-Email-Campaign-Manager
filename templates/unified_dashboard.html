@@ -347,12 +347,18 @@ Your Team</textarea>
                                         <span class="badge bg-success me-2">
                                             <i class="fas fa-robot me-1"></i>AI Agent Auto-Active
                                         </span>
+                                        <span class="badge bg-info me-2" id="next-check-timer">
+                                            <i class="fas fa-clock me-1"></i>Next Check: <span id="countdown-timer">--:--</span>
+                                        </span>
+                                        <span class="badge bg-warning me-2" id="current-time">
+                                            <i class="fas fa-calendar-alt me-1"></i><span id="live-time">--:--:--</span>
+                                        </span>
                                         <button class="btn btn-info btn-sm" onclick="checkForReplies()">
                                             <i class="fas fa-sync me-1"></i>Refresh Now
-                                        </button>
+                                    </button>
                                         <button class="btn btn-success btn-sm ms-2" onclick="manualCheckAndReply()">
                                             <i class="fas fa-robot me-1"></i>AI Check & Reply
-                                        </button>
+                                    </button>
                                 </div>
                             </div>
                                 <div id="repliesList">
@@ -541,8 +547,8 @@ Your Team</textarea>
                                     <i class="fas fa-chart-line me-1"></i>
                                     <span id="conversion-trend">+0%</span> vs last month
                                 </small>
-                            </div>
-                        </div>
+            </div>
+        </div>
     </div>
 
                     <!-- AI Analytics Row -->
@@ -558,7 +564,7 @@ Your Team</textarea>
                                             <div class="d-flex justify-content-between">
                                                 <span>Successful AI Replies</span>
                                                 <strong class="text-success" id="ai-success-count">0</strong>
-                                            </div>
+                </div>
                                         </div>
                                     </div>
                                     <div class="col-6">
@@ -581,7 +587,7 @@ Your Team</textarea>
                                 <h5 class="fw-bold mb-3">
                                     <i class="fas fa-brain me-2"></i>🧠 Sentiment Analysis Insights
                                 </h5>
-                                <div class="mb-3">
+                        <div class="mb-3">
                                     <div class="d-flex justify-content-between mb-2">
                                         <span>😊 Positive Responses</span>
                                         <span class="fw-bold text-success" id="positive-sentiment">0%</span>
@@ -589,8 +595,8 @@ Your Team</textarea>
                                     <div class="progress mb-3">
                                         <div class="progress-bar bg-success" id="positive-bar" style="width: 0%"></div>
                                     </div>
-                                </div>
-                                <div class="mb-3">
+                        </div>
+                        <div class="mb-3">
                                     <div class="d-flex justify-content-between mb-2">
                                         <span>😐 Neutral Responses</span>
                                         <span class="fw-bold text-warning" id="neutral-sentiment">0%</span>
@@ -598,15 +604,15 @@ Your Team</textarea>
                                     <div class="progress mb-3">
                                         <div class="progress-bar bg-warning" id="neutral-bar" style="width: 0%"></div>
                                     </div>
-                                </div>
-                                <div class="mb-3">
+                        </div>
+                        <div class="mb-3">
                                     <div class="d-flex justify-content-between mb-2">
                                         <span>😞 Negative Responses</span>
                                         <span class="fw-bold text-danger" id="negative-sentiment">0%</span>
-                                    </div>
+                        </div>
                                     <div class="progress mb-3">
                                         <div class="progress-bar bg-danger" id="negative-bar" style="width: 0%"></div>
-                                    </div>
+                </div>
                                 </div>
             </div>
                         </div>
@@ -644,8 +650,8 @@ Your Team</textarea>
                                     </h4>
                                     <button class="btn btn-primary btn-sm" onclick="loadEmailAccounts()">
                                         <i class="fas fa-sync me-1"></i>Refresh
-                                    </button>
-                                </div>
+                    </button>
+                </div>
                                 <p class="text-muted mb-3">Manage multiple email accounts for different campaigns and departments.</p>
                                 
                                 <!-- Email Accounts List -->
@@ -656,7 +662,7 @@ Your Team</textarea>
                                         <p>Please wait while we load your email account configurations.</p>
                                     </div>
                                 </div>
-                            </div>
+            </div>
                         </div>
                     </div>
 
@@ -805,6 +811,37 @@ Your Team</textarea>
         
         // Auto-check for replies based on user settings
         let emailCheckInterval;
+        let countdownInterval;
+        let nextCheckTime;
+        
+        function updateCountdown() {
+            if (!nextCheckTime) return;
+            
+            const now = new Date().getTime();
+            const timeLeft = nextCheckTime - now;
+            
+            if (timeLeft <= 0) {
+                document.getElementById('countdown-timer').textContent = 'Checking...';
+                return;
+            }
+            
+            const minutes = Math.floor(timeLeft / 60000);
+            const seconds = Math.floor((timeLeft % 60000) / 1000);
+            
+            document.getElementById('countdown-timer').textContent = 
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+        
+        function updateLiveTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('en-US', { 
+                hour12: false,
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            document.getElementById('live-time').textContent = timeString;
+        }
         
         function startEmailCheckInterval() {
             const interval = document.getElementById('check-interval')?.value || 600000; // Default 10 minutes
@@ -813,6 +850,20 @@ Your Team</textarea>
             if (emailCheckInterval) {
                 clearInterval(emailCheckInterval);
             }
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+            }
+            
+            // Set next check time
+            nextCheckTime = new Date().getTime() + parseInt(interval);
+            
+            // Start countdown timer (update every second)
+            countdownInterval = setInterval(() => {
+                updateCountdown();
+                updateLiveTime();
+            }, 1000);
+            updateCountdown(); // Initial update
+            updateLiveTime(); // Initial time update
             
             emailCheckInterval = setInterval(() => {
                 console.log('🔄 Auto-checking for replies...');
@@ -821,6 +872,8 @@ Your Team</textarea>
                 } else {
                     checkForReplies();
                 }
+                // Reset next check time
+                nextCheckTime = new Date().getTime() + parseInt(interval);
             }, parseInt(interval));
             
             console.log(`🔄 Email checking started every ${interval/60000} minutes`);
@@ -836,6 +889,24 @@ Your Team</textarea>
                 e.preventDefault();
                 addContact();
             });
+            
+            // Settings change listeners
+            const checkIntervalSelect = document.getElementById('check-interval');
+            const aiAutoReplyCheckbox = document.getElementById('ai-auto-reply');
+            
+            if (checkIntervalSelect) {
+                checkIntervalSelect.addEventListener('change', function() {
+                    console.log('🔄 Check interval changed, restarting timer...');
+                    startEmailCheckInterval();
+                });
+            }
+            
+            if (aiAutoReplyCheckbox) {
+                aiAutoReplyCheckbox.addEventListener('change', function() {
+                    console.log('🤖 AI auto-reply setting changed, restarting timer...');
+                    startEmailCheckInterval();
+                });
+            }
 
             // Campaign form
             document.getElementById('campaignForm').addEventListener('submit', function(e) {
@@ -1655,8 +1726,8 @@ Your Team</textarea>
                 showAlert('🤖 Auto-replying with AI...', 'info');
                 
                 const response = await fetch('/api/ai/auto-reply', {
-                    method: 'POST',
-                    headers: {
+                method: 'POST',
+                headers: {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({ reply_id: replyId })
@@ -2027,11 +2098,11 @@ Your Team</textarea>
         async function toggleEmailAccount(accountId, active) {
             try {
                 const response = await fetch('/api/email-accounts/update', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
                         account_id: accountId,
                         active: active
                     })
