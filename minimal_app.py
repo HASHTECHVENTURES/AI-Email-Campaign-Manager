@@ -1134,6 +1134,17 @@ def start_manual_campaign():
                         'status': 'Sent',
                         'timestamp': datetime.now().isoformat()
                     })
+                    
+                    # IMPORTANT: Track sent email for reply monitoring
+                    sent_campaign_emails['recipients'].add(contact['email'].lower())
+                    sent_campaign_emails['subjects'].add(subject)
+                    sent_campaign_emails['campaigns'].append({
+                        'recipient': contact['email'],
+                        'subject': subject,
+                        'campaign_name': 'Manual Campaign',
+                        'sent_date': datetime.now().isoformat()
+                    })
+                    print(f"✅ TRACKED SENT EMAIL: {contact['email']} for reply monitoring")
                 else:
                     contact['status'] = 'Failed'
                     campaign_status['failed_emails'] += 1
@@ -1279,6 +1290,12 @@ def monitoring_status():
 def check_now():
     """Manually check for replies right now"""
     try:
+        # Debug: Show what emails we're tracking
+        print(f"🔧 REPLY CHECK DEBUG:")
+        print(f"   Tracked recipients: {list(sent_campaign_emails['recipients'])}")
+        print(f"   Tracked subjects: {list(sent_campaign_emails['subjects'])}")
+        print(f"   Total campaigns: {len(sent_campaign_emails['campaigns'])}")
+        
         # Check if we have any sent emails to look for replies to
         if not sent_campaign_emails['recipients']:
             return jsonify({'success': False, 'message': 'No sent emails found. Send a campaign first to receive replies.'})
