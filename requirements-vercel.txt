@@ -1,0 +1,24 @@
+# Vercel Deployment Requirements
+# AI Email Campaign Manager - Production Dependencies
+
+# Core Framework
+Flask==3.1.2
+Werkzeug==3.1.3
+
+# Data Processing
+pandas==2.3.2
+numpy==2.0.2
+openpyxl==3.1.5
+
+# Environment Management
+python-dotenv==1.1.1
+
+# HTTP Requests
+requests==2.31.0
+
+# Production WSGI Server
+gunicorn==21.2.0
+
+# Note: Vercel will automatically install these dependencies
+# Make sure to set environment variables in Vercel dashboard:
+# EMAIL, PASSWORD, GEMINI_API_KEY

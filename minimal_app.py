@@ -1546,3 +1546,6 @@ if __name__ == '__main__':
     print("✅ Auto-monitoring started - will check for replies every 30 seconds!")
     
     app.run(debug=True, host='0.0.0.0', port=5008)
+
+# Vercel deployment entry point
+# This ensures the app is available for Vercel's serverless functions
