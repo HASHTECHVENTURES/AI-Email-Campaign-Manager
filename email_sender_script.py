@@ -2,10 +2,15 @@ import smtplib
 from email.message import EmailMessage
 import openpyxl
 import datetime
+import os
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # Gmail Configuration
-EMAIL = "Youremail"  # Your sender email
-PASSWORD = "Password"  # Your generated app password
+EMAIL = os.getenv('EMAIL')  # Your sender email
+PASSWORD = os.getenv('PASSWORD')  # Your generated app password
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 587
 
@@ -57,7 +62,7 @@ Team Zerobughero
 
 # Function to send emails and update Excel
 def send_emails_from_excel():
-    file_name = "email_sender_data.xlsx"  # Ensure this file exists
+    file_name = "email_sender_datasource.xlsx"  # Ensure this file exists
     
     try:
         wb = openpyxl.load_workbook(file_name)

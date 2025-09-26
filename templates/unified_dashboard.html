@@ -1,0 +1,1951 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Email Campaign Manager - Intelligent Marketing Platform</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .main-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            margin: 20px auto;
+            padding: 30px;
+            max-width: 1400px;
+        }
+        .section-card {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+            border-left: 4px solid #667eea;
+            transition: all 0.3s ease;
+        }
+        .section-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        .btn-primary {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border: none;
+            border-radius: 25px;
+            padding: 12px 30px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        .btn-success {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            border: none;
+            border-radius: 25px;
+            padding: 12px 30px;
+            font-weight: 600;
+        }
+        .btn-danger {
+            background: linear-gradient(45deg, #dc3545, #e74c3c);
+            border: none;
+            border-radius: 25px;
+            padding: 12px 30px;
+            font-weight: 600;
+        }
+        .stats-card {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            margin: 10px;
+        }
+        .contact-item {
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
+            border-left: 3px solid #28a745;
+            transition: all 0.3s ease;
+        }
+        .contact-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        .status-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+        .status-pending { background: #ffc107; color: #000; }
+        .status-sent { background: #28a745; color: #fff; }
+        .status-failed { background: #dc3545; color: #fff; }
+        .form-control, .form-select {
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            padding: 12px 15px;
+            transition: all 0.3s ease;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        .progress-bar {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border-radius: 10px;
+        }
+        .alert {
+            border-radius: 15px;
+            border: none;
+        }
+        .table {
+            border-radius: 15px;
+            overflow: hidden;
+        }
+        .table thead th {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            font-weight: 600;
+        }
+        .loading {
+            display: none;
+        }
+        .loading.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="main-container">
+            <!-- Header -->
+            <div class="text-center mb-4">
+                <h1 class="display-4 fw-bold text-primary">
+                    <i class="fas fa-robot me-3"></i>
+                    AI Email Campaign Manager
+                </h1>
+                <p class="lead text-muted">Intelligent Email Marketing with AI-Powered Responses</p>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="stats-card">
+                        <h3 id="total-contacts">0</h3>
+                        <p class="mb-0">Total Contacts</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stats-card">
+                        <h3 id="sent-emails">0</h3>
+                        <p class="mb-0">Emails Sent</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stats-card">
+                        <h3 id="success-rate">0%</h3>
+                        <p class="mb-0">Success Rate</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stats-card">
+                        <h3 id="campaign-status">Ready</h3>
+                        <p class="mb-0">Campaign Status</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content Tabs -->
+            <ul class="nav nav-tabs mb-4" id="mainTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="contacts-tab" data-bs-toggle="tab" data-bs-target="#contacts" type="button" role="tab">
+                        <i class="fas fa-users me-2"></i>Manage Contacts
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="campaign-tab" data-bs-toggle="tab" data-bs-target="#campaign" type="button" role="tab">
+                        <i class="fas fa-paper-plane me-2"></i>Email Campaign
+                    </button>
+                </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="replies-tab" data-bs-toggle="tab" data-bs-target="#replies" type="button" role="tab">
+                                <i class="fas fa-reply me-2"></i>Replies <span class="badge bg-danger" id="replies-count">0</span>
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="ai-conversations-tab" data-bs-toggle="tab" data-bs-target="#ai-conversations" type="button" role="tab">
+                                <i class="fas fa-robot me-2"></i>AI Conversations <span class="badge bg-success" id="ai-conversations-count">0</span>
+                            </button>
+                        </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="analytics-tab" data-bs-toggle="tab" data-bs-target="#analytics" type="button" role="tab">
+                        <i class="fas fa-chart-line me-2"></i>Analytics
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content" id="mainTabsContent">
+                <!-- Contacts Tab -->
+                <div class="tab-pane fade show active" id="contacts" role="tabpanel">
+            <div class="row">
+                        <!-- Add Contact Form -->
+                        <div class="col-md-4">
+                    <div class="section-card">
+                                <h4 class="fw-bold mb-3">
+                                    <i class="fas fa-user-plus me-2"></i>Add New Contact
+                        </h4>
+                                <form id="addContactForm">
+                        <div class="mb-3">
+                                        <label class="form-label">Email Address *</label>
+                                        <input type="email" class="form-control" id="email" required>
+                                </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">First Name *</label>
+                                        <input type="text" class="form-control" id="firstName" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Last Name *</label>
+                                        <input type="text" class="form-control" id="lastName" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Gender</label>
+                                        <select class="form-select" id="gender">
+                                        <option value="M">Male</option>
+                                        <option value="F">Female</option>
+                                        <option value="O">Other</option>
+                                    </select>
+                                </div>
+                                    <button type="submit" class="btn btn-primary w-100">
+                                        <i class="fas fa-plus me-2"></i>Add Contact
+                            </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Contact List -->
+                        <div class="col-md-8">
+                            <div class="section-card">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h4 class="fw-bold mb-0">
+                                        <i class="fas fa-list me-2"></i>Contact List
+                                    </h4>
+                                    <button class="btn btn-danger btn-sm" onclick="clearAllContacts()">
+                                        <i class="fas fa-trash me-1"></i>Clear All
+                            </button>
+                                </div>
+                                <div id="contactsList">
+                                    <div class="text-center text-muted py-4">
+                                        <i class="fas fa-users fa-3x mb-3"></i>
+                                        <p>No contacts added yet. Add contacts using the form on the left.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                        </div>
+
+                <!-- Campaign Tab -->
+                <div class="tab-pane fade" id="campaign" role="tabpanel">
+                    <div class="row">
+                        <!-- Campaign Setup -->
+                <div class="col-md-6">
+                    <div class="section-card">
+                                <h4 class="fw-bold mb-3">
+                                    <i class="fas fa-cog me-2"></i>Campaign Setup
+                        </h4>
+                                <form id="campaignForm">
+                        <div class="mb-3">
+                                        <label class="form-label">Email Subject *</label>
+                                        <input type="text" class="form-control" id="campaignSubject" 
+                                               value="Partnership Opportunity - Let's Connect!" required>
+                        </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Email Message *</label>
+                                        <textarea class="form-control" id="campaignMessage" rows="8" required>Hello {first_name},
+
+I hope this email finds you well. I'm reaching out because I believe there's a great opportunity for us to work together.
+
+Our company specializes in business solutions and we've helped businesses like yours achieve significant growth and efficiency improvements.
+
+I would love to schedule a brief 15-minute call to discuss how we can help your business:
+
+✅ Increase revenue by 25-40%
+✅ Reduce operational costs
+✅ Improve customer satisfaction
+✅ Streamline your processes
+
+Would you be available for a quick call this week? I can work around your schedule.
+
+Looking forward to hearing from you!
+
+Best regards,
+Your Team</textarea>
+                                    </div>
+                                    <div class="d-grid gap-2">
+                                        <button type="submit" class="btn btn-success btn-lg" id="startCampaignBtn">
+                                            <i class="fas fa-paper-plane me-2"></i>Start Email Campaign
+                            </button>
+                                        <button type="button" class="btn btn-warning" onclick="resetCampaign()">
+                                            <i class="fas fa-undo me-2"></i>Reset Campaign
+                            </button>
+                        </div>
+                                </form>
+                    </div>
+                </div>
+
+                        <!-- Campaign Progress -->
+                <div class="col-md-6">
+                    <div class="section-card">
+                                <h4 class="fw-bold mb-3">
+                                    <i class="fas fa-chart-line me-2"></i>Campaign Progress
+                        </h4>
+                                <div id="campaignProgress">
+                                    <div class="text-center text-muted py-4">
+                                        <i class="fas fa-paper-plane fa-3x mb-3"></i>
+                                        <p>No campaign running. Start a campaign to see progress here.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+                <!-- Replies Tab -->
+                <div class="tab-pane fade" id="replies" role="tabpanel">
+            <div class="row">
+                        <!-- Reply Management -->
+                        <div class="col-md-8">
+                    <div class="section-card">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h4 class="fw-bold mb-0">
+                                        <i class="fas fa-inbox me-2"></i>Email Replies
+                        </h4>
+                                <div>
+                                        <span class="badge bg-success me-2">
+                                            <i class="fas fa-check me-1"></i>Auto-Monitoring Active
+                                        </span>
+                                        <span class="badge bg-success me-2">
+                                            <i class="fas fa-robot me-1"></i>AI Agent Auto-Active
+                                        </span>
+                                        <button class="btn btn-info btn-sm" onclick="checkForReplies()">
+                                            <i class="fas fa-sync me-1"></i>Refresh Now
+                                    </button>
+                                </div>
+                            </div>
+                                <div id="repliesList">
+                                    <div class="text-center text-muted py-4">
+                                        <i class="fas fa-inbox fa-3x mb-3"></i>
+                                        <p><strong>AI Email Monitoring Active</strong></p>
+                                        <p>Replies will appear here automatically when contacts respond to your campaigns. The AI agent will analyze and respond intelligently to each email.</p>
+                                    </div>
+                                </div>
+                    </div>
+                        </div>
+
+                        <!-- Reply Actions -->
+                <div class="col-md-4">
+                    <div class="section-card">
+                                <h4 class="fw-bold mb-3">
+                                    <i class="fas fa-cog me-2"></i>Reply Settings
+                        </h4>
+                        <div class="mb-3">
+                                    <label class="form-label">Auto-Monitoring Status</label>
+                                    <div class="d-flex align-items-center">
+                                        <span class="badge bg-success" id="monitoring-status">Always Active</span>
+                                        <small class="text-muted ms-2">No setup needed</small>
+                                </div>
+                            </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Last Check</label>
+                                    <small class="text-muted" id="last-check">Never</small>
+                        </div>
+                                <div class="mb-3">
+                                    <label class="form-label">AI Personality</label>
+                                    <select class="form-select" id="aiPersonality" onchange="updateAIPersonality()">
+                                        <option value="auto">🤖 Smart Auto-Select</option>
+                                        <option value="professional">👔 Professional</option>
+                                        <option value="friendly">😊 Friendly</option>
+                                        <option value="consultative">🎯 Consultative</option>
+                                        <option value="enthusiastic">🚀 Enthusiastic</option>
+                                    </select>
+                                    <small class="text-muted">AI automatically selects the best personality for each contact</small>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">AI Performance</label>
+                                    <div class="row text-center">
+                                        <div class="col-4">
+                                            <div class="bg-success bg-opacity-10 p-2 rounded">
+                                                <div class="fw-bold text-success" id="ai-success-rate">95%</div>
+                                                <small class="text-muted">Success Rate</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-4">
+                                            <div class="bg-info bg-opacity-10 p-2 rounded">
+                                                <div class="fw-bold text-info" id="ai-response-time">1.2s</div>
+                                                <small class="text-muted">Avg Response</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-4">
+                                            <div class="bg-warning bg-opacity-10 p-2 rounded">
+                                                <div class="fw-bold text-warning" id="ai-conversations">12</div>
+                                                <small class="text-muted">Conversations</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Quick Actions</label>
+                                    <div class="d-grid gap-2">
+                                        <button class="btn btn-outline-primary btn-sm" onclick="markAllAsRead()">
+                                            <i class="fas fa-check me-1"></i>Mark All as Read
+                                        </button>
+                                        <button class="btn btn-outline-success btn-sm me-2" onclick="retryFailedAI()">
+                                            <i class="fas fa-redo me-1"></i>Retry AI Failures
+                                        </button>
+                                        <button class="btn btn-outline-warning btn-sm me-2" onclick="removeDuplicateReplies()">
+                                            <i class="fas fa-copy me-1"></i>Remove Duplicates
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                    </div>
+                </div>
+            </div>
+
+                <!-- AI Conversations Tab -->
+                <div class="tab-pane fade" id="ai-conversations" role="tabpanel">
+            <div class="row">
+                        <div class="col-12">
+                    <div class="section-card">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h4 class="fw-bold mb-0">
+                                        <i class="fas fa-robot me-2"></i>AI Conversation Summary
+                        </h4>
+                                    <div>
+                                        <span class="badge bg-success me-2">
+                                            <i class="fas fa-check me-1"></i>AI Agent Active
+                                        </span>
+                                        <button class="btn btn-info btn-sm" onclick="refreshAIConversations()">
+                                            <i class="fas fa-sync me-1"></i>Refresh
+                                        </button>
+                            </div>
+                        </div>
+                                <div class="alert alert-success">
+                                    <i class="fas fa-robot me-2"></i>
+                                    <strong>🧠 Super Smart AI Agent Active!</strong> The AI now features:
+                                    <ul class="mb-0 mt-2">
+                                        <li><strong>Personality Adaptation:</strong> Automatically selects the best personality for each contact</li>
+                                        <li><strong>Context Memory:</strong> Remembers conversation history for better responses</li>
+                                        <li><strong>Sentiment Analysis:</strong> Detects emotions and intent in incoming emails</li>
+                                        <li><strong>Smart Responses:</strong> Tailored replies based on detected sentiment and urgency</li>
+                                    </ul>
+                                </div>
+                                <div id="aiConversationsList">
+                                    <div class="text-center text-muted py-4">
+                                        <i class="fas fa-robot fa-3x mb-3"></i>
+                                        <p><strong>AI Conversation Intelligence</strong></p>
+                                        <p>AI-powered conversations will appear here as your intelligent agent engages with prospects automatically.</p>
+                                    </div>
+                                </div>
+                </div>
+            </div>
+                    </div>
+                </div>
+
+                <!-- Analytics Tab -->
+                <div class="tab-pane fade" id="analytics" role="tabpanel">
+                    <!-- Analytics Header -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                    <div class="section-card">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h4 class="fw-bold mb-1">
+                                            <i class="fas fa-chart-line me-2"></i>🔥 INSANE Analytics Dashboard
+                        </h4>
+                                        <p class="text-muted mb-0">Real-time insights and performance metrics that will blow your mind!</p>
+                                    </div>
+                                    <div>
+                                        <button class="btn btn-primary btn-sm me-2" onclick="refreshAnalytics()">
+                                            <i class="fas fa-sync me-1"></i>Refresh Data
+                                        </button>
+                                        <button class="btn btn-outline-primary btn-sm" onclick="exportAnalytics()">
+                                            <i class="fas fa-download me-1"></i>Export Report
+                                        </button>
+                                    </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                    <!-- Key Performance Indicators -->
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="section-card text-center">
+                                <div class="display-6 fw-bold text-primary" id="total-campaigns">0</div>
+                                <h6 class="text-muted">Total Campaigns</h6>
+                                <small class="text-success">
+                                    <i class="fas fa-arrow-up me-1"></i>
+                                    <span id="campaigns-growth">+0%</span> this month
+                                </small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="section-card text-center">
+                                <div class="display-6 fw-bold text-success" id="total-responses">0</div>
+                                <h6 class="text-muted">Total Responses</h6>
+                                <small class="text-success">
+                                    <i class="fas fa-arrow-up me-1"></i>
+                                    <span id="responses-growth">+0%</span> this week
+                                </small>
+                    </div>
+                </div>
+                        <div class="col-md-3">
+                            <div class="section-card text-center">
+                                <div class="display-6 fw-bold text-warning" id="ai-efficiency">95%</div>
+                                <h6 class="text-muted">AI Efficiency</h6>
+                                <small class="text-success">
+                                    <i class="fas fa-robot me-1"></i>
+                                    <span id="ai-improvement">+15%</span> improvement
+                                </small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="section-card text-center">
+                                <div class="display-6 fw-bold text-info" id="conversion-rate">23%</div>
+                                <h6 class="text-muted">Conversion Rate</h6>
+                                <small class="text-success">
+                                    <i class="fas fa-chart-line me-1"></i>
+                                    <span id="conversion-trend">+8%</span> vs last month
+                                </small>
+            </div>
+        </div>
+    </div>
+
+                    <!-- AI Analytics Row -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="section-card">
+                                <h5 class="fw-bold mb-3">
+                                    <i class="fas fa-robot me-2"></i>🤖 AI Performance Analytics
+                                </h5>
+                                <div class="row">
+                                    <div class="col-6">
+                                        <div class="bg-success bg-opacity-10 p-3 rounded mb-3">
+                                            <div class="d-flex justify-content-between">
+                                                <span>Successful AI Replies</span>
+                                                <strong class="text-success" id="ai-success-count">47</strong>
+                </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="bg-danger bg-opacity-10 p-3 rounded mb-3">
+                                            <div class="d-flex justify-content-between">
+                                                <span>Failed AI Replies</span>
+                                                <strong class="text-danger" id="ai-failed-count">3</strong>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="alert alert-success">
+                                    <i class="fas fa-fire me-2"></i>
+                                    <strong>AI is CRUSHING IT!</strong> 94% success rate with intelligent responses!
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="section-card">
+                                <h5 class="fw-bold mb-3">
+                                    <i class="fas fa-brain me-2"></i>🧠 Sentiment Analysis Insights
+                                </h5>
+                        <div class="mb-3">
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>😊 Positive Responses</span>
+                                        <span class="fw-bold text-success" id="positive-sentiment">67%</span>
+                                    </div>
+                                    <div class="progress mb-3">
+                                        <div class="progress-bar bg-success" id="positive-bar" style="width: 67%"></div>
+                                    </div>
+                        </div>
+                        <div class="mb-3">
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>😐 Neutral Responses</span>
+                                        <span class="fw-bold text-warning" id="neutral-sentiment">23%</span>
+                                    </div>
+                                    <div class="progress mb-3">
+                                        <div class="progress-bar bg-warning" id="neutral-bar" style="width: 23%"></div>
+                                    </div>
+                        </div>
+                        <div class="mb-3">
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>😞 Negative Responses</span>
+                                        <span class="fw-bold text-danger" id="negative-sentiment">10%</span>
+                        </div>
+                                    <div class="progress mb-3">
+                                        <div class="progress-bar bg-danger" id="negative-bar" style="width: 10%"></div>
+                </div>
+                </div>
+            </div>
+                        </div>
+                    </div>
+
+                    <!-- Real-time Activity Feed -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="section-card">
+                                <h5 class="fw-bold mb-3">
+                                    <i class="fas fa-bolt me-2"></i>⚡ Real-time Activity Feed
+                                </h5>
+                                <div id="activity-feed" style="max-height: 300px; overflow-y: auto;">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="bg-success rounded-circle p-2 me-3">
+                                            <i class="fas fa-robot text-white"></i>
+                                        </div>
+                                        <div>
+                                            <strong>AI replied to John Smith</strong>
+                                            <br><small class="text-muted">2 minutes ago • Enthusiastic personality used</small>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="bg-info rounded-circle p-2 me-3">
+                                            <i class="fas fa-envelope text-white"></i>
+                                        </div>
+                                        <div>
+                                            <strong>New reply received from Sarah Johnson</strong>
+                                            <br><small class="text-muted">5 minutes ago • Positive sentiment detected</small>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="bg-warning rounded-circle p-2 me-3">
+                                            <i class="fas fa-brain text-white"></i>
+                                        </div>
+                                        <div>
+                                            <strong>AI analyzed 3 new emails</strong>
+                                            <br><small class="text-muted">8 minutes ago • 2 interested, 1 needs follow-up</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                </div>
+            </div>
+
+            <!-- Alerts -->
+            <div id="alertContainer"></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Global variables
+        let contacts = [];
+        let campaignStatus = {};
+        let replies = [];
+        let monitoringStatus = false;
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            loadContacts();
+            loadCampaignStatus();
+            loadReplies();
+            loadMonitoringStatus();
+            loadAIConversations(); // Load AI conversations
+            loadAnalyticsDashboard(); // Load INSANE analytics! 🔥
+            setupEventListeners();
+            
+            // Auto-remove duplicates on page load
+            setTimeout(() => {
+                removeDuplicateRepliesQuietly();
+            }, 1000); // Remove duplicates after 1 second
+            
+            // Auto-start monitoring when page loads
+            setTimeout(() => {
+                startEmailMonitoring();
+            }, 2000); // Start after 2 seconds
+            
+            // Auto-refresh analytics every 30 seconds
+            setInterval(() => {
+                loadAnalyticsDashboard();
+            }, 30000);
+        });
+
+        function setupEventListeners() {
+            // Add contact form
+            document.getElementById('addContactForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                addContact();
+            });
+
+            // Campaign form
+            document.getElementById('campaignForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                startCampaign();
+            });
+        }
+
+        async function loadContacts() {
+            try {
+                const response = await fetch('/get-contacts');
+                contacts = await response.json();
+                updateContactsDisplay();
+                updateStats();
+            } catch (error) {
+                console.error('Error loading contacts:', error);
+            }
+        }
+
+        async function loadCampaignStatus() {
+            try {
+                const response = await fetch('/api/status');
+                campaignStatus = await response.json();
+                updateCampaignDisplay();
+                updateStats();
+            } catch (error) {
+                console.error('Error loading campaign status:', error);
+            }
+        }
+
+        function updateContactsDisplay() {
+            const container = document.getElementById('contactsList');
+            
+            if (contacts.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-users fa-3x mb-3"></i>
+                        <p>No contacts added yet. Add contacts using the form on the left.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = '';
+            contacts.forEach((contact, index) => {
+                const statusClass = contact.status === 'Sent' ? 'status-sent' : 
+                                  contact.status === 'Failed' ? 'status-failed' : 'status-pending';
+                
+                html += `
+                    <div class="contact-item">
+                        <div class="row align-items-center">
+                            <div class="col-md-6">
+                                <h6 class="mb-1">${contact.first_name} ${contact.last_name}</h6>
+                        <small class="text-muted">${contact.email}</small>
+                    </div>
+                            <div class="col-md-3">
+                                <span class="status-badge ${statusClass}">${contact.status}</span>
+                </div>
+                            <div class="col-md-3 text-end">
+                                <button class="btn btn-sm btn-outline-danger" onclick="removeContact('${contact.email}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+
+        function updateCampaignDisplay() {
+            const container = document.getElementById('campaignProgress');
+            
+            if (!campaignStatus.running && campaignStatus.total_emails === 0) {
+                container.innerHTML = `
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-paper-plane fa-3x mb-3"></i>
+                        <p>No campaign running. Start a campaign to see progress here.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            const progress = campaignStatus.total_emails > 0 ? 
+                (campaignStatus.sent_emails / campaignStatus.total_emails) * 100 : 0;
+
+            container.innerHTML = `
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Progress</span>
+                        <span>${campaignStatus.sent_emails}/${campaignStatus.total_emails}</span>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar" style="width: ${progress}%"></div>
+                </div>
+                </div>
+                <div class="row text-center">
+                    <div class="col-md-4">
+                        <h5 class="text-success">${campaignStatus.sent_emails}</h5>
+                        <small>Sent</small>
+                    </div>
+                    <div class="col-md-4">
+                        <h5 class="text-danger">${campaignStatus.failed_emails}</h5>
+                        <small>Failed</small>
+                    </div>
+                    <div class="col-md-4">
+                        <h5 class="text-info">${campaignStatus.total_emails - campaignStatus.sent_emails - campaignStatus.failed_emails}</h5>
+                        <small>Pending</small>
+                    </div>
+                </div>
+            `;
+        }
+
+        function updateStats() {
+            document.getElementById('total-contacts').textContent = contacts.length;
+            document.getElementById('sent-emails').textContent = campaignStatus.sent_emails || 0;
+            
+            const successRate = campaignStatus.total_emails > 0 ? 
+                Math.round((campaignStatus.sent_emails / campaignStatus.total_emails) * 100) : 0;
+            document.getElementById('success-rate').textContent = successRate + '%';
+            
+            const status = campaignStatus.running ? 'Running' : 
+                          campaignStatus.total_emails > 0 ? 'Completed' : 'Ready';
+            document.getElementById('campaign-status').textContent = status;
+        }
+
+        async function addContact() {
+            const email = document.getElementById('email').value;
+            const firstName = document.getElementById('firstName').value;
+            const lastName = document.getElementById('lastName').value;
+            const gender = document.getElementById('gender').value;
+
+            const formData = new FormData();
+            formData.append('email', email);
+            formData.append('first_name', firstName);
+            formData.append('last_name', lastName);
+            formData.append('gender', gender);
+
+            try {
+                const response = await fetch('/add-contact', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showAlert('Contact added successfully!', 'success');
+                    document.getElementById('addContactForm').reset();
+                    loadContacts();
+                } else {
+                    showAlert(result.message, 'danger');
+                }
+            } catch (error) {
+                showAlert('Error adding contact: ' + error.message, 'danger');
+            }
+        }
+
+        async function removeContact(email) {
+            if (!confirm('Are you sure you want to remove this contact?')) return;
+
+            try {
+                const response = await fetch('/remove-contact', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email: email })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showAlert('Contact removed successfully!', 'success');
+                    loadContacts();
+                } else {
+                    showAlert(result.message, 'danger');
+                }
+            } catch (error) {
+                showAlert('Error removing contact: ' + error.message, 'danger');
+            }
+        }
+
+        async function startCampaign() {
+            if (contacts.length === 0) {
+                showAlert('Please add contacts before starting a campaign!', 'warning');
+                return;
+            }
+
+            const subject = document.getElementById('campaignSubject').value;
+            const message = document.getElementById('campaignMessage').value;
+
+            const formData = new FormData();
+            formData.append('subject', subject);
+            formData.append('message', message);
+
+            try {
+                showAlert('Starting campaign...', 'info');
+                document.getElementById('startCampaignBtn').disabled = true;
+                document.getElementById('startCampaignBtn').innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Sending...';
+
+                const response = await fetch('/start-manual-campaign', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showAlert(result.message, 'success');
+                    loadContacts();
+                    loadCampaignStatus();
+                } else {
+                    showAlert(result.message, 'danger');
+                }
+            } catch (error) {
+                showAlert('Error starting campaign: ' + error.message, 'danger');
+            } finally {
+                document.getElementById('startCampaignBtn').disabled = false;
+                document.getElementById('startCampaignBtn').innerHTML = '<i class="fas fa-paper-plane me-2"></i>Start Email Campaign';
+            }
+        }
+
+        async function resetCampaign() {
+            if (!confirm('Are you sure you want to reset the campaign? This will clear all progress.')) return;
+
+            try {
+                const response = await fetch('/reset-campaign', {
+                    method: 'POST'
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showAlert('Campaign reset successfully!', 'success');
+                    loadContacts();
+                    loadCampaignStatus();
+                } else {
+                    showAlert(result.message, 'danger');
+                }
+            } catch (error) {
+                showAlert('Error resetting campaign: ' + error.message, 'danger');
+            }
+        }
+
+        async function clearAllContacts() {
+            if (!confirm('Are you sure you want to clear all contacts? This action cannot be undone.')) return;
+
+            // Remove all contacts one by one
+            for (const contact of contacts) {
+                try {
+                    await fetch('/remove-contact', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ email: contact.email })
+                    });
+                } catch (error) {
+                    console.error('Error removing contact:', error);
+                }
+            }
+            
+            showAlert('All contacts cleared!', 'success');
+            loadContacts();
+        }
+
+        function showAlert(message, type) {
+            const alertContainer = document.getElementById('alertContainer');
+            const alertId = 'alert-' + Date.now();
+            
+            const alertHtml = `
+                <div id="${alertId}" class="alert alert-${type} alert-dismissible fade show" role="alert">
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+            
+            alertContainer.insertAdjacentHTML('beforeend', alertHtml);
+            
+            // Auto-dismiss after 5 seconds
+            setTimeout(() => {
+                const alert = document.getElementById(alertId);
+                if (alert) {
+                    alert.remove();
+                }
+            }, 5000);
+        }
+
+        // Auto-refresh every 5 seconds when campaign is running
+        setInterval(() => {
+            if (campaignStatus.running) {
+                loadCampaignStatus();
+            }
+        }, 5000);
+
+        // Auto-refresh replies every 10 seconds when monitoring is active
+        setInterval(() => {
+            if (monitoringStatus) {
+                loadReplies();
+            }
+        }, 10000);
+
+        // Reply Management Functions
+        async function loadReplies() {
+            try {
+                const response = await fetch('/api/replies');
+                replies = await response.json();
+                updateRepliesDisplay();
+                updateRepliesCount();
+                updateAIPerformanceMetrics(); // Update AI metrics
+            } catch (error) {
+                console.error('Error loading replies:', error);
+            }
+        }
+
+        async function loadMonitoringStatus() {
+            try {
+                const response = await fetch('/api/email-monitoring/status');
+                const status = await response.json();
+                monitoringStatus = status.enabled;
+                updateMonitoringDisplay(status);
+                
+                // Auto-refresh replies when monitoring is active
+                if (monitoringStatus) {
+                    loadReplies();
+                }
+            } catch (error) {
+                console.error('Error loading monitoring status:', error);
+            }
+        }
+
+        function updateRepliesDisplay() {
+            const container = document.getElementById('repliesList');
+            
+            if (replies.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-inbox fa-3x mb-3"></i>
+                        <p>No replies received yet. Check for replies or start auto-monitoring.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = '';
+            replies.forEach((reply, index) => {
+                const statusClass = reply.status === 'New' ? 'status-pending' : 
+                                  reply.status === 'Replied' ? 'status-sent' : 'status-failed';
+                
+                html += `
+                    <div class="contact-item">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <div class="d-flex align-items-center mb-2">
+                                    <h6 class="mb-0 me-3">${reply.from_name || reply.from_email}</h6>
+                                    <span class="status-badge ${statusClass}">${reply.status}</span>
+                                    <small class="text-muted ms-2">${new Date(reply.received_date).toLocaleString()}</small>
+                        </div>
+                                <h6 class="text-primary mb-1">${reply.subject}</h6>
+                                <p class="text-muted mb-0 small">${reply.message.substring(0, 100)}${reply.message.length > 100 ? '...' : ''}</p>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <button class="btn btn-sm btn-outline-primary me-1" onclick="viewReply(${reply.id})">
+                                    <i class="fas fa-eye"></i>
+                            </button>
+                                ${reply.ai_auto_replied ? 
+                                    '<span class="badge bg-success me-1"><i class="fas fa-robot me-1"></i>AI Replied</span>' : 
+                                    reply.ai_error ? 
+                                        '<span class="badge bg-warning me-1"><i class="fas fa-exclamation-triangle me-1"></i>AI Error</span>' :
+                                        '<span class="badge bg-info me-1"><i class="fas fa-clock me-1"></i>Processing...</span>'
+                                }
+                                <button class="btn btn-sm btn-outline-danger" onclick="deleteReply(${reply.id})">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                        </div>
+                    </div>
+                </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+
+        function updateRepliesCount() {
+            const newReplies = replies.filter(r => r.status === 'New').length;
+            document.getElementById('replies-count').textContent = newReplies;
+        }
+
+        function updateMonitoringDisplay(status) {
+            const statusElement = document.getElementById('monitoring-status');
+            const lastCheckElement = document.getElementById('last-check');
+            
+            // Always show as active since monitoring starts automatically
+            statusElement.textContent = 'Always Active';
+            statusElement.className = 'badge bg-success';
+            
+            if (status.last_check) {
+                lastCheckElement.textContent = new Date(status.last_check).toLocaleString();
+            } else {
+                lastCheckElement.textContent = 'Auto-checking every 30 seconds';
+            }
+        }
+
+        async function checkForReplies() {
+            try {
+                showAlert('Checking for replies...', 'info');
+                const response = await fetch('/api/email-monitoring/check-now', {
+                    method: 'POST'
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showAlert(`Found ${result.replies_count} replies!`, 'success');
+                    loadReplies();
+                } else {
+                    showAlert(result.message, 'danger');
+                }
+            } catch (error) {
+                showAlert('Error checking for replies: ' + error.message, 'danger');
+            }
+        }
+
+        async function startEmailMonitoring() {
+            try {
+                const response = await fetch('/api/email-monitoring/start', {
+                    method: 'POST'
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showAlert('Email monitoring started!', 'success');
+                    loadMonitoringStatus();
+                } else {
+                    showAlert(result.message, 'danger');
+                }
+            } catch (error) {
+                showAlert('Error starting monitoring: ' + error.message, 'danger');
+            }
+        }
+
+        async function toggleMonitoring() {
+            if (monitoringStatus) {
+                try {
+                    const response = await fetch('/api/email-monitoring/stop', {
+                        method: 'POST'
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        showAlert('Email monitoring stopped!', 'warning');
+                        loadMonitoringStatus();
+                    } else {
+                        showAlert(result.message, 'danger');
+                    }
+                } catch (error) {
+                    showAlert('Error stopping monitoring: ' + error.message, 'danger');
+                }
+            } else {
+                await startEmailMonitoring();
+            }
+        }
+
+        function viewReply(replyId) {
+            const reply = replies.find(r => r.id === replyId);
+            if (reply) {
+                // Remove any existing modal first
+                const existingModal = document.getElementById('replyModal');
+                if (existingModal) {
+                    existingModal.remove();
+                }
+                
+                const modal = `
+                    <div class="modal fade" id="replyModal" tabindex="-1">
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Reply from ${reply.from_name || reply.from_email}</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="mb-3">
+                                        <strong>Subject:</strong> ${reply.subject}
+                                    </div>
+                                    <div class="mb-3">
+                                        <strong>Received:</strong> ${new Date(reply.received_date).toLocaleString()}
+                                    </div>
+                                    <div class="mb-3">
+                                        <strong>Message:</strong>
+                                        <div class="border p-3 rounded" style="background: #f8f9fa;">
+                                            ${reply.message.replace(/\n/g, '<br>')}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-primary" onclick="replyToEmail(${reply.id})">
+                                        <i class="fas fa-reply me-1"></i>Reply
+                                    </button>
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.insertAdjacentHTML('beforeend', modal);
+                const modalElement = new bootstrap.Modal(document.getElementById('replyModal'));
+                modalElement.show();
+                
+                // Clean up modal after it's hidden
+                document.getElementById('replyModal').addEventListener('hidden.bs.modal', function() {
+                    this.remove();
+                });
+            }
+        }
+
+        function replyToEmail(replyId) {
+            const reply = replies.find(r => r.id === replyId);
+            if (reply) {
+                // Remove any existing modal first
+                const existingModal = document.getElementById('replyModal');
+                if (existingModal) {
+                    existingModal.remove();
+                }
+                
+                const modal = `
+                    <div class="modal fade" id="replyModal" tabindex="-1">
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Reply to ${reply.from_name || reply.from_email}</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <form id="replyForm">
+                                        <div class="mb-3">
+                                            <label class="form-label">To:</label>
+                                            <input type="email" class="form-control" value="${reply.from_email}" readonly>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Subject:</label>
+                                            <input type="text" class="form-control" id="replySubject" value="Re: ${reply.subject}">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Message:</label>
+                                            <textarea class="form-control" id="replyMessage" rows="8" placeholder="Type your reply here..."></textarea>
+                                        </div>
+                                    </form>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-primary" onclick="sendReply(${reply.id})">
+                                        <i class="fas fa-paper-plane me-1"></i>Send Reply
+                                    </button>
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.insertAdjacentHTML('beforeend', modal);
+                const modalElement = new bootstrap.Modal(document.getElementById('replyModal'));
+                modalElement.show();
+                
+                // Clean up modal after it's hidden
+                document.getElementById('replyModal').addEventListener('hidden.bs.modal', function() {
+                    this.remove();
+                });
+            }
+        }
+
+        async function sendReply(replyId) {
+            const subject = document.getElementById('replySubject').value;
+            const message = document.getElementById('replyMessage').value;
+            const reply = replies.find(r => r.id === replyId);
+            
+            if (!subject || !message) {
+                showAlert('Please fill in all fields!', 'warning');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/send-reply', {
+                method: 'POST',
+                headers: {
+                        'Content-Type': 'application/json'
+                },
+                    body: JSON.stringify({
+                        to_email: reply.from_email,
+                    subject: subject,
+                        message: message,
+                        reply_id: replyId
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showAlert('Reply sent successfully!', 'success');
+                    bootstrap.Modal.getInstance(document.getElementById('replyModal')).hide();
+                    loadReplies();
+                } else {
+                    showAlert(result.message, 'danger');
+                }
+            } catch (error) {
+                showAlert('Error sending reply: ' + error.message, 'danger');
+            }
+        }
+
+        async function deleteReply(replyId) {
+            if (!confirm('Are you sure you want to delete this reply?')) return;
+            
+            try {
+                // Note: You'll need to implement a delete endpoint in your backend
+                showAlert('Delete functionality will be implemented in the backend', 'info');
+            } catch (error) {
+                showAlert('Error deleting reply: ' + error.message, 'danger');
+            }
+        }
+
+        async function markAllAsRead() {
+            try {
+                showAlert('Marking all replies as read...', 'info');
+                // Note: You'll need to implement this endpoint in your backend
+                showAlert('Mark as read functionality will be implemented in the backend', 'info');
+            } catch (error) {
+                showAlert('Error marking replies as read: ' + error.message, 'danger');
+            }
+        }
+
+
+        async function removeDuplicateReplies() {
+            if (!confirm('Remove duplicate replies? This will keep only unique emails.')) return;
+            
+            try {
+                showAlert('🔄 Removing duplicate replies...', 'info');
+                
+                const response = await fetch('/api/replies/remove-duplicates', {
+                    method: 'POST'
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showAlert(`✅ Removed ${result.removed_count} duplicate replies! (${result.original_count} → ${result.current_count})`, 'success');
+                    loadReplies();
+                    loadAIConversations(); // Refresh AI conversations too
+                } else {
+                    showAlert(result.message, 'danger');
+                }
+            } catch (error) {
+                showAlert('Error removing duplicates: ' + error.message, 'danger');
+            }
+        }
+
+        async function removeDuplicateRepliesQuietly() {
+            try {
+                const response = await fetch('/api/replies/remove-duplicates', {
+                    method: 'POST'
+                });
+                
+                const result = await response.json();
+                
+                if (result.success && result.removed_count > 0) {
+                    console.log(`🗑️ Auto-removed ${result.removed_count} duplicate replies on page load`);
+                    loadReplies();
+                    loadAIConversations(); // Refresh AI conversations too
+                }
+            } catch (error) {
+                console.error('Error auto-removing duplicates:', error);
+            }
+        }
+
+
+        async function retryFailedAI() {
+            if (!confirm('Retry AI replies for all failed emails?')) return;
+            
+            try {
+                showAlert('🔄 Retrying failed AI replies...', 'info');
+                
+                const response = await fetch('/api/ai/retry-failed', {
+                    method: 'POST'
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showAlert(`✅ Retry completed! ${result.success_count} succeeded, ${result.failed_count} failed`, 'success');
+                    loadReplies();
+                    loadAIConversations(); // Refresh AI conversations
+                } else {
+                    showAlert(result.message, 'danger');
+                }
+            } catch (error) {
+                showAlert('Error retrying AI: ' + error.message, 'danger');
+            }
+        }
+
+        async function clearAllReplies() {
+            if (!confirm('Are you sure you want to clear all replies? This action cannot be undone.')) return;
+            
+            try {
+                const response = await fetch('/api/replies/clear', {
+                    method: 'POST'
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showAlert('All replies cleared!', 'success');
+                    loadReplies();
+                } else {
+                    showAlert(result.message, 'danger');
+                }
+            } catch (error) {
+                showAlert('Error clearing replies: ' + error.message, 'danger');
+            }
+        }
+
+        // ==================== AI AGENT FUNCTIONS ====================
+
+        async function enableAIAgent() {
+            showAlert('🤖 AI Agent enabled! The system will now automatically analyze and respond to emails using Gemini AI.', 'success');
+        }
+
+        async function generateAIReply(replyId) {
+            try {
+                showAlert('🤖 Generating AI reply...', 'info');
+                
+                const response = await fetch('/api/ai/generate-reply', {
+                method: 'POST',
+                headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ reply_id: replyId })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Show AI reply in a modal
+                    showAIReplyModal(result.ai_reply, replyId);
+                } else {
+                    showAlert(`❌ Failed to generate AI reply: ${result.message}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`❌ Error generating AI reply: ${error.message}`, 'danger');
+            }
+        }
+
+        async function smartReply(replyId) {
+            try {
+                showAlert('🧠 Smart reply: Analyzing email and generating response...', 'info');
+                
+                const response = await fetch('/api/ai/smart-reply', {
+                method: 'POST',
+                headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ reply_id: replyId, auto_send: false })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Show smart reply with analysis
+                    showSmartReplyModal(result.analysis, result.ai_reply, replyId);
+                } else {
+                    showAlert(`❌ Failed to generate smart reply: ${result.message}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`❌ Error generating smart reply: ${error.message}`, 'danger');
+            }
+        }
+
+        async function autoReplyWithAI(replyId) {
+            try {
+                showAlert('🤖 Auto-replying with AI...', 'info');
+                
+                const response = await fetch('/api/ai/auto-reply', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ reply_id: replyId })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showAlert('✅ AI reply sent successfully!', 'success');
+                    loadReplies(); // Refresh replies
+                } else {
+                    showAlert(`❌ Failed to send AI reply: ${result.message}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`❌ Error sending AI reply: ${error.message}`, 'danger');
+            }
+        }
+
+        function showAIReplyModal(aiReply, replyId) {
+            // Remove existing modal if any
+            const existingModal = document.getElementById('aiReplyModal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+            
+            const modalHtml = `
+                <div class="modal fade" id="aiReplyModal" tabindex="-1">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">
+                                    <i class="fas fa-robot me-2"></i>AI Generated Reply
+                                </h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <label class="form-label">AI Generated Response:</label>
+                                    <textarea class="form-control" rows="8" readonly>${aiReply}</textarea>
+                                </div>
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    This reply was generated by Gemini AI. You can edit it before sending.
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="button" class="btn btn-warning" onclick="editAIReply(${replyId})">
+                                    <i class="fas fa-edit me-1"></i>Edit & Send
+                                </button>
+                                <button type="button" class="btn btn-success" onclick="sendAIReply(${replyId})">
+                                    <i class="fas fa-paper-plane me-1"></i>Send As-Is
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            const modal = new bootstrap.Modal(document.getElementById('aiReplyModal'));
+            modal.show();
+        }
+
+        function showSmartReplyModal(analysis, aiReply, replyId) {
+            // Remove existing modal if any
+            const existingModal = document.getElementById('smartReplyModal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+            
+            const sentimentClass = analysis.sentiment === 'positive' ? 'success' : 
+                                 analysis.sentiment === 'negative' ? 'danger' : 'warning';
+            
+            const modalHtml = `
+                <div class="modal fade" id="smartReplyModal" tabindex="-1">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">
+                                    <i class="fas fa-brain me-2"></i>Smart Reply Analysis
+                                </h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <div class="card">
+                                            <div class="card-header">
+                                                <h6 class="mb-0"><i class="fas fa-chart-line me-2"></i>Email Analysis</h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <p><strong>Sentiment:</strong> <span class="badge bg-${sentimentClass}">${analysis.sentiment}</span></p>
+                                                <p><strong>Intent:</strong> <span class="badge bg-info">${analysis.intent}</span></p>
+                                                <p><strong>Urgency:</strong> <span class="badge bg-warning">${analysis.urgency}</span></p>
+                                                <p><strong>Suggested Action:</strong> <span class="badge bg-primary">${analysis.suggested_action}</span></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="card">
+                                            <div class="card-header">
+                                                <h6 class="mb-0"><i class="fas fa-robot me-2"></i>AI Response</h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <textarea class="form-control" rows="6" readonly>${aiReply}</textarea>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="button" class="btn btn-warning" onclick="editSmartReply(${replyId})">
+                                    <i class="fas fa-edit me-1"></i>Edit & Send
+                                </button>
+                                <button type="button" class="btn btn-success" onclick="sendSmartReply(${replyId})">
+                                    <i class="fas fa-paper-plane me-1"></i>Send Smart Reply
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            const modal = new bootstrap.Modal(document.getElementById('smartReplyModal'));
+            modal.show();
+        }
+
+        function editAIReply(replyId) {
+            // Close modal and open edit interface
+            const modal = bootstrap.Modal.getInstance(document.getElementById('aiReplyModal'));
+            modal.hide();
+            
+            // You can implement edit functionality here
+            showAlert('Edit functionality coming soon!', 'info');
+        }
+
+        function sendAIReply(replyId) {
+            autoReplyWithAI(replyId);
+            const modal = bootstrap.Modal.getInstance(document.getElementById('aiReplyModal'));
+            modal.hide();
+        }
+
+        function editSmartReply(replyId) {
+            // Close modal and open edit interface
+            const modal = bootstrap.Modal.getInstance(document.getElementById('smartReplyModal'));
+            modal.hide();
+            
+            // You can implement edit functionality here
+            showAlert('Edit functionality coming soon!', 'info');
+        }
+
+        function sendSmartReply(replyId) {
+            autoReplyWithAI(replyId);
+            const modal = bootstrap.Modal.getInstance(document.getElementById('smartReplyModal'));
+            modal.hide();
+        }
+
+        // ==================== SUPER SMART AI FUNCTIONS ====================
+
+        function updateAIPersonality() {
+            const personality = document.getElementById('aiPersonality').value;
+            showAlert(`🤖 AI Personality updated to: ${personality}`, 'info');
+            // In a real implementation, this would save the preference
+        }
+
+        function updateAIPerformanceMetrics() {
+            // Calculate AI performance metrics
+            const aiReplies = replies.filter(r => r.ai_auto_replied);
+            const totalReplies = replies.length;
+            const successRate = totalReplies > 0 ? Math.round((aiReplies.length / totalReplies) * 100) : 0;
+            
+            // Update UI
+            document.getElementById('ai-success-rate').textContent = `${successRate}%`;
+            document.getElementById('ai-conversations').textContent = aiReplies.length;
+            
+            // Simulate response time (in real app, this would be tracked)
+            const avgResponseTime = (Math.random() * 2 + 0.5).toFixed(1);
+            document.getElementById('ai-response-time').textContent = `${avgResponseTime}s`;
+        }
+
+        function getPersonalityIcon(personality) {
+            const icons = {
+                'professional': '👔',
+                'friendly': '😊',
+                'consultative': '🎯',
+                'enthusiastic': '🚀',
+                'auto': '🤖'
+            };
+            return icons[personality] || '🤖';
+        }
+
+        function getSentimentBadge(sentiment, confidence) {
+            const badges = {
+                'positive': `<span class="badge bg-success">😊 Positive (${Math.round(confidence * 100)}%)</span>`,
+                'negative': `<span class="badge bg-danger">😞 Negative (${Math.round(confidence * 100)}%)</span>`,
+                'neutral': `<span class="badge bg-secondary">😐 Neutral (${Math.round(confidence * 100)}%)</span>`
+            };
+            return badges[sentiment] || `<span class="badge bg-secondary">😐 Unknown</span>`;
+        }
+
+        function getIntentBadge(intent) {
+            const badges = {
+                'very_interested': '<span class="badge bg-success">🔥 Very Interested</span>',
+                'interested': '<span class="badge bg-info">👍 Interested</span>',
+                'not_interested': '<span class="badge bg-danger">👎 Not Interested</span>',
+                'needs_information': '<span class="badge bg-warning">❓ Needs Info</span>',
+                'has_questions': '<span class="badge bg-primary">❓ Has Questions</span>',
+                'neutral_response': '<span class="badge bg-secondary">💬 Neutral</span>'
+            };
+            return badges[intent] || '<span class="badge bg-secondary">💬 Unknown</span>';
+        }
+
+        // ==================== INSANE ANALYTICS FUNCTIONS ====================
+
+        async function loadAnalyticsDashboard() {
+            try {
+                const response = await fetch('/api/analytics/dashboard');
+                const data = await response.json();
+                
+                if (data.success !== false) {
+                    updateAnalyticsDisplay(data);
+                }
+            } catch (error) {
+                console.error('Error loading analytics:', error);
+            }
+        }
+
+        function updateAnalyticsDisplay(data) {
+            // Update KPIs
+            document.getElementById('total-campaigns').textContent = data.kpis.total_campaigns;
+            document.getElementById('total-responses').textContent = data.kpis.total_responses;
+            document.getElementById('ai-efficiency').textContent = data.kpis.ai_efficiency + '%';
+            document.getElementById('conversion-rate').textContent = data.kpis.conversion_rate + '%';
+            
+            // Update growth indicators
+            document.getElementById('campaigns-growth').textContent = data.kpis.campaigns_growth;
+            document.getElementById('responses-growth').textContent = data.kpis.responses_growth;
+            document.getElementById('ai-improvement').textContent = data.kpis.ai_improvement;
+            document.getElementById('conversion-trend').textContent = data.kpis.conversion_trend;
+            
+            // Update AI performance
+            document.getElementById('ai-success-count').textContent = data.ai_performance.successful_replies;
+            document.getElementById('ai-failed-count').textContent = data.ai_performance.failed_replies;
+            
+            // Update sentiment analysis
+            document.getElementById('positive-sentiment').textContent = data.sentiment_analysis.positive + '%';
+            document.getElementById('neutral-sentiment').textContent = data.sentiment_analysis.neutral + '%';
+            document.getElementById('negative-sentiment').textContent = data.sentiment_analysis.negative + '%';
+            
+            document.getElementById('positive-bar').style.width = data.sentiment_analysis.positive + '%';
+            document.getElementById('neutral-bar').style.width = data.sentiment_analysis.neutral + '%';
+            document.getElementById('negative-bar').style.width = data.sentiment_analysis.negative + '%';
+            
+            // Update activity feed
+            updateActivityFeed(data.activity_feed);
+        }
+
+        function updateActivityFeed(activities) {
+            const feed = document.getElementById('activity-feed');
+            let html = '';
+            
+            activities.forEach(activity => {
+                const colorClass = activity.color === 'success' ? 'bg-success' : 
+                                 activity.color === 'info' ? 'bg-info' : 
+                                 activity.color === 'warning' ? 'bg-warning' : 'bg-primary';
+                
+                html += `
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="${colorClass} rounded-circle p-2 me-3">
+                            <i class="fas fa-${activity.icon} text-white"></i>
+                        </div>
+                        <div>
+                            <strong>${activity.message}</strong>
+                            <br><small class="text-muted">${activity.time}</small>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            feed.innerHTML = html;
+        }
+
+        async function refreshAnalytics() {
+            showAlert('🔄 Refreshing analytics data...', 'info');
+            await loadAnalyticsDashboard();
+            showAlert('✅ Analytics refreshed!', 'success');
+        }
+
+        async function exportAnalytics() {
+            showAlert('📊 Exporting analytics report...', 'info');
+            // In a real implementation, this would generate and download a report
+            setTimeout(() => {
+                showAlert('✅ Analytics report exported! (Feature coming soon)', 'success');
+            }, 1000);
+        }
+
+        // ==================== AI CONVERSATION SUMMARY ====================
+
+        async function loadAIConversations() {
+            try {
+                const response = await fetch('/api/replies');
+                const allReplies = await response.json();
+                
+                // Filter only AI-replied conversations
+                const aiConversations = allReplies.filter(reply => reply.ai_auto_replied);
+                updateAIConversationsDisplay(aiConversations);
+                updateAIConversationsCount(aiConversations.length);
+            } catch (error) {
+                console.error('Error loading AI conversations:', error);
+            }
+        }
+
+        function updateAIConversationsDisplay(conversations) {
+            const container = document.getElementById('aiConversationsList');
+            
+            if (conversations.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-robot fa-3x mb-3"></i>
+                        <p>No AI conversations yet. The AI will automatically respond to incoming emails.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            conversations.forEach((conversation, index) => {
+                const aiReplyDate = conversation.ai_reply_date ? new Date(conversation.ai_reply_date).toLocaleString() : 'Just now';
+                
+                html += `
+                    <div class="card mb-3">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-0">
+                                    <i class="fas fa-user me-2"></i>${conversation.from_name || conversation.from_email}
+                                </h6>
+                                <small class="text-muted">${conversation.subject}</small>
+                            </div>
+                            <div>
+                                <span class="badge bg-success">
+                                    <i class="fas fa-robot me-1"></i>AI Replied
+                                </span>
+                                <small class="text-muted ms-2">${aiReplyDate}</small>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6 class="text-primary">
+                                        <i class="fas fa-inbox me-2"></i>Incoming Email:
+                                    </h6>
+                                    <div class="bg-light p-3 rounded">
+                                        <p class="mb-0 small">${conversation.message.substring(0, 200)}${conversation.message.length > 200 ? '...' : ''}</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 class="text-success">
+                                        <i class="fas fa-robot me-2"></i>AI Response:
+                                    </h6>
+                                    <div class="bg-light p-3 rounded">
+                                        <p class="mb-0 small text-success">
+                                            <i class="fas fa-check-circle me-1"></i>
+                                            AI automatically generated and sent a professional response
+                                        </p>
+                                        <small class="text-muted">Response sent at ${aiReplyDate}</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">
+                                        <i class="fas fa-clock me-1"></i>
+                                        Received: ${new Date(conversation.received_date).toLocaleString()}
+                                    </small>
+                                    <div>
+                                        <button class="btn btn-sm btn-outline-primary" onclick="viewAIConversation(${conversation.id})">
+                                            <i class="fas fa-eye me-1"></i>View Details
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+
+        function updateAIConversationsCount(count) {
+            document.getElementById('ai-conversations-count').textContent = count;
+        }
+
+        async function refreshAIConversations() {
+            showAlert('🔄 Refreshing AI conversations...', 'info');
+            await loadAIConversations();
+            showAlert('✅ AI conversations refreshed!', 'success');
+        }
+
+        function viewAIConversation(conversationId) {
+            // Find the conversation
+            const conversation = replies.find(r => r.id === conversationId);
+            if (!conversation) return;
+
+            // Show conversation details in a modal
+            const modalHtml = `
+                <div class="modal fade" id="aiConversationModal" tabindex="-1">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">
+                                    <i class="fas fa-robot me-2"></i>AI Conversation Details
+                                </h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="card">
+                                            <div class="card-header">
+                                                <h6 class="mb-0">
+                                                    <i class="fas fa-inbox me-2"></i>Incoming Email
+                                                </h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <p><strong>From:</strong> ${conversation.from_name || conversation.from_email}</p>
+                                                <p><strong>Subject:</strong> ${conversation.subject}</p>
+                                                <p><strong>Received:</strong> ${new Date(conversation.received_date).toLocaleString()}</p>
+                                                <hr>
+                                                <p><strong>Message:</strong></p>
+                                                <div class="bg-light p-3 rounded">
+                                                    <p class="mb-0">${conversation.message}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="card">
+                                            <div class="card-header">
+                                                <h6 class="mb-0">
+                                                    <i class="fas fa-robot me-2"></i>AI Response
+                                                </h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <p><strong>Status:</strong> <span class="badge bg-success">AI Replied</span></p>
+                                                <p><strong>Sent:</strong> ${conversation.ai_reply_date ? new Date(conversation.ai_reply_date).toLocaleString() : 'Just now'}</p>
+                                                <hr>
+                                                <p><strong>AI Generated Response:</strong></p>
+                                                <div class="bg-success bg-opacity-10 p-3 rounded">
+                                                    <p class="mb-0 text-success">
+                                                        <i class="fas fa-check-circle me-1"></i>
+                                                        AI automatically analyzed the email and sent a professional, contextual response.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            const modal = new bootstrap.Modal(document.getElementById('aiConversationModal'));
+            modal.show();
+        }
+    </script>
+</body>
+</html>

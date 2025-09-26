@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics Dashboard - Lead Generation Automation</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .main-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            margin: 30px auto;
+            padding: 40px;
+            max-width: 1400px;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 15px 0;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(102, 126, 234, 0.3);
+        }
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .chart-container {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+        }
+        .btn-primary {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border: none;
+            border-radius: 25px;
+            padding: 12px 30px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        .metric-card {
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 15px;
+            padding: 25px;
+            margin: 15px 0;
+            text-align: center;
+            border-left: 4px solid #667eea;
+        }
+        .progress-ring {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto;
+        }
+        .progress-ring circle {
+            fill: transparent;
+            stroke-width: 8;
+            stroke-linecap: round;
+        }
+        .progress-ring .progress-ring-circle {
+            stroke: #667eea;
+            stroke-dasharray: 283;
+            stroke-dashoffset: 283;
+            transition: stroke-dashoffset 0.5s ease-in-out;
+        }
+        .progress-ring .progress-ring-bg {
+            stroke: #e9ecef;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="main-container">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="display-5 fw-bold text-primary">
+                    <i class="fas fa-chart-line me-3"></i>
+                    Analytics Dashboard
+                </h1>
+                <div>
+                    <a href="{{ url_for('index') }}" class="btn btn-outline-primary me-2">
+                        <i class="fas fa-home me-2"></i>
+                        Home
+                    </a>
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-outline-primary me-2">
+                        <i class="fas fa-tachometer-alt me-2"></i>
+                        Dashboard
+                    </a>
+                    <button class="btn btn-primary" onclick="refreshAnalytics()">
+                        <i class="fas fa-sync-alt me-2"></i>
+                        Refresh
+                    </button>
+                </div>
+            </div>
+
+            <!-- Key Metrics -->
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalContacts">0</div>
+                        <div>Total Contacts</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-number" id="sentContacts">0</div>
+                        <div>Sent Successfully</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-number" id="bouncedContacts">0</div>
+                        <div>Bounced</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-number" id="successRate">0%</div>
+                        <div>Success Rate</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Row -->
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="chart-container">
+                        <h5 class="mb-4">
+                            <i class="fas fa-pie-chart me-2 text-primary"></i>
+                            Campaign Performance
+                        </h5>
+                        <canvas id="performanceChart" width="400" height="200"></canvas>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="chart-container">
+                        <h5 class="mb-4">
+                            <i class="fas fa-users me-2 text-primary"></i>
+                            Gender Distribution
+                        </h5>
+                        <canvas id="genderChart" width="400" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detailed Metrics -->
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="metric-card">
+                        <h6 class="text-muted mb-3">Delivery Rate</h6>
+                        <div class="progress-ring">
+                            <svg class="progress-ring" width="120" height="120">
+                                <circle class="progress-ring-bg" cx="60" cy="60" r="45"></circle>
+                                <circle class="progress-ring-circle" cx="60" cy="60" r="45" id="deliveryRing"></circle>
+                            </svg>
+                        </div>
+                        <div class="mt-3">
+                            <h4 id="deliveryRate">0%</h4>
+                            <small class="text-muted">Emails Delivered</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="metric-card">
+                        <h6 class="text-muted mb-3">Bounce Rate</h6>
+                        <div class="progress-ring">
+                            <svg class="progress-ring" width="120" height="120">
+                                <circle class="progress-ring-bg" cx="60" cy="60" r="45"></circle>
+                                <circle class="progress-ring-circle" cx="60" cy="60" r="45" id="bounceRing" style="stroke: #dc3545;"></circle>
+                            </svg>
+                        </div>
+                        <div class="mt-3">
+                            <h4 id="bounceRate">0%</h4>
+                            <small class="text-muted">Emails Bounced</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="metric-card">
+                        <h6 class="text-muted mb-3">Pending Rate</h6>
+                        <div class="progress-ring">
+                            <svg class="progress-ring" width="120" height="120">
+                                <circle class="progress-ring-bg" cx="60" cy="60" r="45"></circle>
+                                <circle class="progress-ring-circle" cx="60" cy="60" r="45" id="pendingRing" style="stroke: #ffc107;"></circle>
+                            </svg>
+                        </div>
+                        <div class="mt-3">
+                            <h4 id="pendingRate">0%</h4>
+                            <small class="text-muted">Emails Pending</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Campaign History -->
+            <div class="chart-container">
+                <h5 class="mb-4">
+                    <i class="fas fa-history me-2 text-primary"></i>
+                    Campaign History
+                </h5>
+                <div id="campaignHistory">
+                    <div class="text-center text-muted py-5">
+                        <i class="fas fa-chart-line fa-3x mb-3"></i>
+                        <h5>No campaign history available</h5>
+                        <p>Start your first campaign to see analytics here</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Performance Insights -->
+            <div class="chart-container">
+                <h5 class="mb-4">
+                    <i class="fas fa-lightbulb me-2 text-primary"></i>
+                    Performance Insights
+                </h5>
+                <div id="insights">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Getting Started:</strong> Add contacts and start your first campaign to see detailed analytics and insights.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let performanceChart, genderChart;
+
+        function updateProgressRing(elementId, percentage) {
+            const circle = document.getElementById(elementId);
+            const radius = circle.r.baseVal.value;
+            const circumference = radius * 2 * Math.PI;
+            const offset = circumference - (percentage / 100) * circumference;
+            circle.style.strokeDasharray = circumference;
+            circle.style.strokeDashoffset = offset;
+        }
+
+        function refreshAnalytics() {
+            fetch('/api/analytics')
+                .then(response => response.json())
+                .then(data => {
+                    updateMetrics(data);
+                    updateCharts(data);
+                    updateInsights(data);
+                })
+                .catch(error => {
+                    console.error('Error fetching analytics:', error);
+                });
+        }
+
+        function updateMetrics(data) {
+            document.getElementById('totalContacts').textContent = data.total_contacts;
+            document.getElementById('sentContacts').textContent = data.sent_contacts;
+            document.getElementById('bouncedContacts').textContent = data.bounced_contacts;
+            document.getElementById('successRate').textContent = data.success_rate + '%';
+            
+            // Update progress rings
+            const total = data.total_contacts;
+            if (total > 0) {
+                const deliveryRate = (data.sent_contacts / total) * 100;
+                const bounceRate = (data.bounced_contacts / total) * 100;
+                const pendingRate = (data.pending_contacts / total) * 100;
+                
+                updateProgressRing('deliveryRing', deliveryRate);
+                updateProgressRing('bounceRing', bounceRate);
+                updateProgressRing('pendingRing', pendingRate);
+                
+                document.getElementById('deliveryRate').textContent = deliveryRate.toFixed(1) + '%';
+                document.getElementById('bounceRate').textContent = bounceRate.toFixed(1) + '%';
+                document.getElementById('pendingRate').textContent = pendingRate.toFixed(1) + '%';
+            }
+        }
+
+        function updateCharts(data) {
+            // Performance Chart
+            const performanceCtx = document.getElementById('performanceChart').getContext('2d');
+            if (performanceChart) performanceChart.destroy();
+            
+            performanceChart = new Chart(performanceCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Sent', 'Bounced', 'Pending'],
+                    datasets: [{
+                        data: [data.sent_contacts, data.bounced_contacts, data.pending_contacts],
+                        backgroundColor: ['#28a745', '#dc3545', '#ffc107'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+
+            // Gender Chart
+            const genderCtx = document.getElementById('genderChart').getContext('2d');
+            if (genderChart) genderChart.destroy();
+            
+            genderChart = new Chart(genderCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Male', 'Female', 'Other'],
+                    datasets: [{
+                        label: 'Contacts',
+                        data: [data.gender_distribution.M, data.gender_distribution.F, data.gender_distribution.O],
+                        backgroundColor: ['#667eea', '#764ba2', '#6c757d'],
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateInsights(data) {
+            const insightsContainer = document.getElementById('insights');
+            let insights = [];
+
+            if (data.total_contacts === 0) {
+                insights.push({
+                    type: 'info',
+                    icon: 'fas fa-info-circle',
+                    title: 'Getting Started',
+                    message: 'Add contacts and start your first campaign to see detailed analytics.'
+                });
+            } else {
+                if (data.success_rate > 80) {
+                    insights.push({
+                        type: 'success',
+                        icon: 'fas fa-check-circle',
+                        title: 'Excellent Performance',
+                        message: `Your success rate of ${data.success_rate}% is excellent! Keep up the great work.`
+                    });
+                } else if (data.success_rate > 60) {
+                    insights.push({
+                        type: 'warning',
+                        icon: 'fas fa-exclamation-triangle',
+                        title: 'Good Performance',
+                        message: `Your success rate of ${data.success_rate}% is good. Consider cleaning your email list to improve further.`
+                    });
+                } else {
+                    insights.push({
+                        type: 'danger',
+                        icon: 'fas fa-exclamation-circle',
+                        title: 'Needs Improvement',
+                        message: `Your success rate of ${data.success_rate}% needs improvement. Review your email list quality.`
+                    });
+                }
+
+                if (data.bounced_contacts > 0) {
+                    insights.push({
+                        type: 'info',
+                        icon: 'fas fa-info-circle',
+                        title: 'Bounce Management',
+                        message: `You have ${data.bounced_contacts} bounced emails. Consider removing invalid addresses from your list.`
+                    });
+                }
+
+                if (data.gender_distribution.M > data.gender_distribution.F) {
+                    insights.push({
+                        type: 'info',
+                        icon: 'fas fa-male',
+                        title: 'Gender Distribution',
+                        message: 'Your contact list has more male contacts. Consider diversifying your outreach.'
+                    });
+                }
+            }
+
+            insightsContainer.innerHTML = insights.map(insight => `
+                <div class="alert alert-${insight.type}">
+                    <i class="${insight.icon} me-2"></i>
+                    <strong>${insight.title}:</strong> ${insight.message}
+                </div>
+            `).join('');
+        }
+
+        // Initialize analytics on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            refreshAnalytics();
+            
+            // Auto-refresh every 30 seconds
+            setInterval(refreshAnalytics, 30000);
+        });
+    </script>
+</body>
+</html>

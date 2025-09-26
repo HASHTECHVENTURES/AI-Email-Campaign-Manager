@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campaign Dashboard - Lead Generation Automation</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .dashboard-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            margin: 30px auto;
+            padding: 40px;
+            max-width: 1200px;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 15px 0;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(102, 126, 234, 0.3);
+        }
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .progress-container {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+        }
+        .progress {
+            height: 25px;
+            border-radius: 15px;
+            background: rgba(102, 126, 234, 0.1);
+        }
+        .progress-bar {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border-radius: 15px;
+            transition: width 0.5s ease;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-running {
+            background: #28a745;
+            animation: pulse 2s infinite;
+        }
+        .status-completed {
+            background: #007bff;
+        }
+        .status-error {
+            background: #dc3545;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        .log-container {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .log-entry {
+            padding: 10px 15px;
+            margin: 5px 0;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            background: rgba(102, 126, 234, 0.05);
+        }
+        .log-success {
+            border-left-color: #28a745;
+            background: rgba(40, 167, 69, 0.05);
+        }
+        .log-error {
+            border-left-color: #dc3545;
+            background: rgba(220, 53, 69, 0.05);
+        }
+        .btn-primary {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border: none;
+            border-radius: 25px;
+            padding: 12px 30px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="dashboard-container">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="display-5 fw-bold text-primary">
+                    <i class="fas fa-tachometer-alt me-3"></i>
+                    Campaign Dashboard
+                </h1>
+                <a href="{{ url_for('index') }}" class="btn btn-outline-primary">
+                    <i class="fas fa-plus me-2"></i>
+                    New Campaign
+                </a>
+            </div>
+
+            <!-- Status Overview -->
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalEmails">0</div>
+                        <div>Total Emails</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-number" id="sentEmails">0</div>
+                        <div>Sent Successfully</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-number" id="failedEmails">0</div>
+                        <div>Bounced/Failed</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-number" id="successRate">0%</div>
+                        <div>Success Rate</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="progress-container">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="mb-0">
+                        <span class="status-indicator" id="statusIndicator"></span>
+                        <span id="statusText">Initializing...</span>
+                    </h5>
+                    <span id="progressText">0 / 0</span>
+                </div>
+                <div class="progress">
+                    <div class="progress-bar" id="progressBar" role="progressbar" style="width: 0%"></div>
+                </div>
+                <div class="mt-2">
+                    <small class="text-muted" id="currentRecipient">Ready to start...</small>
+                </div>
+            </div>
+
+            <!-- Campaign Details -->
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="log-container">
+                        <h5 class="mb-3">
+                            <i class="fas fa-list me-2"></i>
+                            Campaign Log
+                        </h5>
+                        <div id="campaignLog">
+                            <div class="log-entry">
+                                <i class="fas fa-info-circle me-2"></i>
+                                Campaign dashboard loaded. Waiting for updates...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="log-container">
+                        <h5 class="mb-3">
+                            <i class="fas fa-exclamation-triangle me-2 text-warning"></i>
+                            Bounce Tracking
+                        </h5>
+                        <div id="bounceLog">
+                            <div class="log-entry">
+                                <i class="fas fa-info-circle me-2"></i>
+                                No bounces detected yet...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="log-container">
+                        <h5 class="mb-3">
+                            <i class="fas fa-clock me-2"></i>
+                            Campaign Timeline
+                        </h5>
+                        <div id="timeline">
+                            <div class="log-entry">
+                                <i class="fas fa-play me-2"></i>
+                                <strong>Started:</strong> <span id="startTime">-</span>
+                            </div>
+                            <div class="log-entry">
+                                <i class="fas fa-stop me-2"></i>
+                                <strong>Ended:</strong> <span id="endTime">-</span>
+                            </div>
+                            <div class="log-entry">
+                                <i class="fas fa-hourglass-half me-2"></i>
+                                <strong>Duration:</strong> <span id="duration">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="text-center mt-4">
+                <button class="btn btn-primary me-3" id="refreshBtn">
+                    <i class="fas fa-sync-alt me-2"></i>
+                    Refresh Status
+                </button>
+                <button class="btn btn-outline-primary" id="downloadBtn" style="display: none;">
+                    <i class="fas fa-download me-2"></i>
+                    Download Results
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let refreshInterval;
+
+        function updateDashboard() {
+            fetch('/api/status')
+                .then(response => response.json())
+                .then(data => {
+                    // Update statistics
+                    document.getElementById('totalEmails').textContent = data.total_emails || 0;
+                    document.getElementById('sentEmails').textContent = data.sent_emails || 0;
+                    document.getElementById('failedEmails').textContent = data.failed_emails || 0;
+                    
+                    // Calculate success rate
+                    const total = data.total_emails || 0;
+                    const sent = data.sent_emails || 0;
+                    const successRate = total > 0 ? Math.round((sent / total) * 100) : 0;
+                    document.getElementById('successRate').textContent = successRate + '%';
+                    
+                    // Update progress
+                    const progress = total > 0 ? Math.round((data.current_progress / total) * 100) : 0;
+                    document.getElementById('progressBar').style.width = progress + '%';
+                    document.getElementById('progressText').textContent = `${data.current_progress || 0} / ${total}`;
+                    
+                    // Update status
+                    const statusIndicator = document.getElementById('statusIndicator');
+                    const statusText = document.getElementById('statusText');
+                    
+                    if (data.running) {
+                        statusIndicator.className = 'status-indicator status-running';
+                        statusText.textContent = 'Campaign Running';
+                    } else if (data.end_time) {
+                        statusIndicator.className = 'status-indicator status-completed';
+                        statusText.textContent = 'Campaign Completed';
+                        document.getElementById('downloadBtn').style.display = 'inline-block';
+                    } else if (data.error) {
+                        statusIndicator.className = 'status-indicator status-error';
+                        statusText.textContent = 'Campaign Error';
+                    } else {
+                        statusIndicator.className = 'status-indicator status-completed';
+                        statusText.textContent = 'Ready';
+                    }
+                    
+                    // Update current recipient
+                    document.getElementById('currentRecipient').textContent = 
+                        data.current_recipient || 'Ready to start...';
+                    
+                    // Update timeline
+                    if (data.start_time) {
+                        document.getElementById('startTime').textContent = 
+                            new Date(data.start_time).toLocaleString();
+                    }
+                    if (data.end_time) {
+                        document.getElementById('endTime').textContent = 
+                            new Date(data.end_time).toLocaleString();
+                        
+                        // Calculate duration
+                        const start = new Date(data.start_time);
+                        const end = new Date(data.end_time);
+                        const duration = Math.round((end - start) / 1000);
+                        const minutes = Math.floor(duration / 60);
+                        const seconds = duration % 60;
+                        document.getElementById('duration').textContent = 
+                            `${minutes}m ${seconds}s`;
+                    }
+                    
+                    // Update campaign log
+                    const logContainer = document.getElementById('campaignLog');
+                    const bounceContainer = document.getElementById('bounceLog');
+                    
+                    if (data.results && data.results.length > 0) {
+                        logContainer.innerHTML = '';
+                        bounceContainer.innerHTML = '';
+                        
+                        const sentEmails = [];
+                        const bouncedEmails = [];
+                        
+                        data.results.slice(-10).forEach(result => {
+                            const logEntry = document.createElement('div');
+                            logEntry.className = `log-entry ${result.status === 'Sent' ? 'log-success' : 'log-error'}`;
+                            logEntry.innerHTML = `
+                                <i class="fas fa-${result.status === 'Sent' ? 'check-circle' : 'exclamation-circle'} me-2"></i>
+                                <strong>${result.email}</strong> - ${result.status}
+                                ${result.error ? `<br><small class="text-muted">${result.error}</small>` : ''}
+                            `;
+                            logContainer.appendChild(logEntry);
+                            
+                            // Separate sent and bounced emails
+                            if (result.status === 'Sent') {
+                                sentEmails.push(result);
+                            } else if (result.error && result.error.includes('Bounced')) {
+                                bouncedEmails.push(result);
+                            }
+                        });
+                        
+                        // Update bounce log
+                        if (bouncedEmails.length > 0) {
+                            bouncedEmails.forEach(bounce => {
+                                const bounceEntry = document.createElement('div');
+                                bounceEntry.className = 'log-entry log-error';
+                                bounceEntry.innerHTML = `
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    <strong>${bounce.email}</strong><br>
+                                    <small class="text-muted">${bounce.error}</small>
+                                `;
+                                bounceContainer.appendChild(bounceEntry);
+                            });
+                        } else {
+                            bounceContainer.innerHTML = `
+                                <div class="log-entry log-success">
+                                    <i class="fas fa-check-circle me-2"></i>
+                                    No bounces detected - All emails delivered successfully!
+                                </div>
+                            `;
+                        }
+                    }
+                    
+                    // Stop refreshing if campaign is completed
+                    if (data.end_time && refreshInterval) {
+                        clearInterval(refreshInterval);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching status:', error);
+                });
+        }
+
+        // Start auto-refresh
+        refreshInterval = setInterval(updateDashboard, 2000);
+        
+        // Initial update
+        updateDashboard();
+        
+        // Manual refresh button
+        document.getElementById('refreshBtn').addEventListener('click', updateDashboard);
+        
+        // Download button
+        document.getElementById('downloadBtn').addEventListener('click', () => {
+            // This would download the updated Excel file
+            alert('Download functionality will be implemented to get the updated Excel file with delivery statuses.');
+        });
+    </script>
+</body>
+</html>

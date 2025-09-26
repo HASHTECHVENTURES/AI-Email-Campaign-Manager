@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔥 Aggressive Email Capture Control</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .aggressive-header {
+            background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+        }
+        .control-panel {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .btn-aggressive {
+            background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
+            border: none;
+            color: white;
+            font-weight: bold;
+            padding: 12px 24px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        .btn-aggressive:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(255, 107, 107, 0.3);
+            color: white;
+        }
+        .btn-ultra {
+            background: linear-gradient(135deg, #ff4757, #ff3838);
+            border: none;
+            color: white;
+            font-weight: bold;
+            padding: 12px 24px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        .btn-ultra:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(255, 71, 87, 0.3);
+            color: white;
+        }
+        .status-card {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .email-item {
+            background: white;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            border-left: 4px solid #ff6b6b;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .email-type-badge {
+            font-size: 0.8rem;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .type-reply { background: #28a745; color: white; }
+        .type-business { background: #007bff; color: white; }
+        .type-lead { background: #ffc107; color: black; }
+        .type-newsletter { background: #6f42c1; color: white; }
+        .type-support { background: #dc3545; color: white; }
+        .type-general { background: #6c757d; color: white; }
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .scanning {
+            background: linear-gradient(45deg, #ff6b6b, #ff8e8e, #ff6b6b);
+            background-size: 200% 200%;
+            animation: scanning 2s ease-in-out infinite;
+        }
+        @keyframes scanning {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="aggressive-header text-center">
+        <div class="container">
+            <h1><i class="fas fa-bullseye"></i> ACCURATE EMAIL CAPTURE CONTROL</h1>
+            <p class="lead">Capture ONLY replies to your sent campaign emails with precision!</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Control Panel -->
+        <div class="control-panel">
+            <h3><i class="fas fa-cogs"></i> Control Panel</h3>
+            <div class="row">
+                <div class="col-md-3">
+                    <button class="btn btn-aggressive w-100 mb-2" onclick="startMonitoring()">
+                        <i class="fas fa-play"></i> Start Monitoring
+                    </button>
+                </div>
+                <div class="col-md-3">
+                    <button class="btn btn-warning w-100 mb-2" onclick="stopMonitoring()">
+                        <i class="fas fa-stop"></i> Stop Monitoring
+                    </button>
+                </div>
+                <div class="col-md-3">
+                    <button class="btn btn-aggressive w-100 mb-2" onclick="aggressiveScan()">
+                        <i class="fas fa-search"></i> Aggressive Scan
+                    </button>
+                </div>
+                <div class="col-md-3">
+                    <button class="btn btn-ultra w-100 mb-2" onclick="ultraAggressiveScan()">
+                        <i class="fas fa-fire"></i> ULTRA Scan
+                    </button>
+                </div>
+            </div>
+            <div class="row mt-2">
+                <div class="col-md-4">
+                    <button class="btn btn-success w-100 mb-2" onclick="accurateScan()">
+                        <i class="fas fa-bullseye"></i> ACCURATE Scan
+                    </button>
+                </div>
+                <div class="col-md-4">
+                    <button class="btn btn-info w-100 mb-2" onclick="viewSentEmails()">
+                        <i class="fas fa-paper-plane"></i> View Sent Emails
+                    </button>
+                </div>
+                <div class="col-md-4">
+                    <button class="btn btn-warning w-100 mb-2" onclick="clearSentTracking()">
+                        <i class="fas fa-trash-alt"></i> Clear Tracking
+                    </button>
+            </div>
+            <div class="row mt-3">
+                <div class="col-md-6">
+                    <button class="btn btn-info w-100 mb-2" onclick="checkNow()">
+                        <i class="fas fa-sync"></i> Check Now
+                    </button>
+                </div>
+                <div class="col-md-6">
+                    <button class="btn btn-success w-100 mb-2" onclick="clearNotifications()">
+                        <i class="fas fa-trash"></i> Clear Notifications
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Cards -->
+        <div class="row">
+            <div class="col-md-4">
+                <div class="status-card">
+                    <h5><i class="fas fa-chart-line"></i> Monitoring Status</h5>
+                    <div id="monitoringStatus">
+                        <span class="badge bg-secondary">Unknown</span>
+                    </div>
+                    <small class="text-muted">Last check: <span id="lastCheck">Never</span></small>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="status-card">
+                    <h5><i class="fas fa-envelope"></i> Total Emails</h5>
+                    <h3 id="totalEmails" class="text-primary">0</h3>
+                    <small class="text-muted">Emails captured</small>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="status-card">
+                    <h5><i class="fas fa-bell"></i> Notifications</h5>
+                    <h3 id="notificationCount" class="text-warning">0</h3>
+                    <small class="text-muted">Unread notifications</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Emails -->
+        <div class="row">
+            <div class="col-12">
+                <div class="status-card">
+                    <h5><i class="fas fa-inbox"></i> Recently Captured Emails</h5>
+                    <div id="recentEmails">
+                        <p class="text-muted">No emails captured yet. Start monitoring to see emails here!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notifications -->
+        <div class="row">
+            <div class="col-12">
+                <div class="status-card">
+                    <h5><i class="fas fa-bell"></i> Recent Notifications</h5>
+                    <div id="notifications">
+                        <p class="text-muted">No notifications yet.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Modal -->
+    <div class="modal fade" id="loadingModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body text-center">
+                    <div class="scanning text-white p-4 rounded">
+                        <h4><i class="fas fa-fire"></i> AGGRESSIVE SCANNING IN PROGRESS</h4>
+                        <p>Please wait while we capture ALL emails...</p>
+                        <div class="spinner-border text-white" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let monitoringInterval;
+        let emailsInterval;
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            updateStatus();
+            loadEmails();
+            loadNotifications();
+            
+            // Auto-refresh every 5 seconds
+            setInterval(updateStatus, 5000);
+            setInterval(loadEmails, 10000);
+            setInterval(loadNotifications, 10000);
+        });
+
+        function showLoading() {
+            const modal = new bootstrap.Modal(document.getElementById('loadingModal'));
+            modal.show();
+        }
+
+        function hideLoading() {
+            const modal = bootstrap.Modal.getInstance(document.getElementById('loadingModal'));
+            if (modal) modal.hide();
+        }
+
+        function startMonitoring() {
+            showLoading();
+            fetch('/api/email-monitoring/start', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    hideLoading();
+                    if (data.success) {
+                        showAlert('success', '🚀 Aggressive monitoring started! Checking every 15 seconds.');
+                        updateStatus();
+                    } else {
+                        showAlert('danger', '❌ Failed to start monitoring: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    hideLoading();
+                    showAlert('danger', '❌ Error: ' + error.message);
+                });
+        }
+
+        function stopMonitoring() {
+            fetch('/api/email-monitoring/stop', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showAlert('warning', '⏹️ Monitoring stopped.');
+                        updateStatus();
+                    } else {
+                        showAlert('danger', '❌ Failed to stop monitoring: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    showAlert('danger', '❌ Error: ' + error.message);
+                });
+        }
+
+        function aggressiveScan() {
+            showLoading();
+            fetch('/api/email-monitoring/aggressive-scan', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    hideLoading();
+                    if (data.success) {
+                        showAlert('success', `🎯 ${data.message}`);
+                        loadEmails();
+                        updateStatus();
+                    } else {
+                        showAlert('danger', '❌ Aggressive scan failed: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    hideLoading();
+                    showAlert('danger', '❌ Error: ' + error.message);
+                });
+        }
+
+        function ultraAggressiveScan() {
+            showLoading();
+            fetch('/api/email-monitoring/ultra-aggressive-scan', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    hideLoading();
+                    if (data.success) {
+                        showAlert('success', `🔥 ${data.message}`);
+                        loadEmails();
+                        updateStatus();
+                    } else {
+                        showAlert('danger', '❌ Ultra-aggressive scan failed: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    hideLoading();
+                    showAlert('danger', '❌ Error: ' + error.message);
+                });
+        }
+
+        function checkNow() {
+            showLoading();
+            fetch('/api/email-monitoring/check-now', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    hideLoading();
+                    if (data.success) {
+                        showAlert('info', `✅ ${data.message}`);
+                        loadEmails();
+                        updateStatus();
+                    } else {
+                        showAlert('danger', '❌ Check failed: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    hideLoading();
+                    showAlert('danger', '❌ Error: ' + error.message);
+                });
+        }
+
+        function clearNotifications() {
+            fetch('/api/notifications/clear', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showAlert('success', '🗑️ Notifications cleared.');
+                        loadNotifications();
+                        updateStatus();
+                    } else {
+                        showAlert('danger', '❌ Failed to clear notifications: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    showAlert('danger', '❌ Error: ' + error.message);
+                });
+        }
+
+        function accurateScan() {
+            showLoading();
+            fetch('/api/accurate-scan', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    hideLoading();
+                    if (data.success) {
+                        showAlert('success', `🎯 ${data.message}`);
+                        loadEmails();
+                        updateStatus();
+                    } else {
+                        showAlert('danger', '❌ Accurate scan failed: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    hideLoading();
+                    showAlert('danger', '❌ Error: ' + error.message);
+                });
+        }
+
+        function viewSentEmails() {
+            fetch('/api/sent-emails')
+                .then(response => response.json())
+                .then(data => {
+                    const message = `📧 Sent Emails Tracking:
+• Total sent: ${data.total_sent}
+• Unique recipients: ${data.unique_recipients}
+• Unique subjects: ${data.unique_subjects}
+• Recent campaigns: ${data.campaigns.length}`;
+                    showAlert('info', message);
+                })
+                .catch(error => {
+                    showAlert('danger', '❌ Error loading sent emails: ' + error.message);
+                });
+        }
+
+        function clearSentTracking() {
+            if (confirm('⚠️ Are you sure you want to clear all sent email tracking? This will affect reply detection accuracy.')) {
+                fetch('/api/sent-emails/clear', { method: 'POST' })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            showAlert('warning', '🗑️ Sent email tracking cleared. Reply detection may be less accurate.');
+                        } else {
+                            showAlert('danger', '❌ Failed to clear tracking: ' + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        showAlert('danger', '❌ Error: ' + error.message);
+                    });
+            }
+        }
+
+        function updateStatus() {
+            fetch('/api/email-monitoring/status')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('monitoringStatus').innerHTML = 
+                        data.enabled ? '<span class="badge bg-success">Active</span>' : '<span class="badge bg-secondary">Inactive</span>';
+                    document.getElementById('lastCheck').textContent = 
+                        data.last_check ? new Date(data.last_check).toLocaleString() : 'Never';
+                    document.getElementById('notificationCount').textContent = data.notifications.length;
+                })
+                .catch(error => {
+                    console.error('Error updating status:', error);
+                });
+        }
+
+        function loadEmails() {
+            fetch('/api/replies')
+                .then(response => response.json())
+                .then(emails => {
+                    document.getElementById('totalEmails').textContent = emails.length;
+                    
+                    const recentEmailsDiv = document.getElementById('recentEmails');
+                    if (emails.length === 0) {
+                        recentEmailsDiv.innerHTML = '<p class="text-muted">No emails captured yet. Start monitoring to see emails here!</p>';
+                        return;
+                    }
+                    
+                    const recentEmails = emails.slice(-10).reverse();
+                    recentEmailsDiv.innerHTML = recentEmails.map(email => `
+                        <div class="email-item">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <span class="email-type-badge type-${email.email_type ? email.email_type.toLowerCase().replace(' ', '-') : 'general'}">
+                                        ${email.email_type || 'General Email'}
+                                    </span>
+                                    <strong>${email.from_name}</strong> (${email.from_email})
+                                    <br>
+                                    <small class="text-muted">${email.subject}</small>
+                                    <br>
+                                    <small class="text-muted">${email.capture_reason || 'Auto-detected'}</small>
+                                </div>
+                                <div class="text-end">
+                                    <small class="text-muted">${new Date(email.received_date).toLocaleString()}</small>
+                                    <br>
+                                    <span class="badge bg-${email.status === 'New' ? 'warning' : 'success'}">${email.status}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                })
+                .catch(error => {
+                    console.error('Error loading emails:', error);
+                });
+        }
+
+        function loadNotifications() {
+            fetch('/api/notifications')
+                .then(response => response.json())
+                .then(notifications => {
+                    const notificationsDiv = document.getElementById('notifications');
+                    if (notifications.length === 0) {
+                        notificationsDiv.innerHTML = '<p class="text-muted">No notifications yet.</p>';
+                        return;
+                    }
+                    
+                    const recentNotifications = notifications.slice(-10).reverse();
+                    notificationsDiv.innerHTML = recentNotifications.map(notification => `
+                        <div class="alert alert-info alert-dismissible fade show" role="alert">
+                            <strong>${notification.type.replace('_', ' ').toUpperCase()}:</strong> ${notification.message}
+                            <br>
+                            <small class="text-muted">${new Date(notification.timestamp).toLocaleString()}</small>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    `).join('');
+                })
+                .catch(error => {
+                    console.error('Error loading notifications:', error);
+                });
+        }
+
+        function showAlert(type, message) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+            alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.body.appendChild(alertDiv);
+            
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.parentNode.removeChild(alertDiv);
+                }
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
