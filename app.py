@@ -385,12 +385,12 @@ def start_campaign():
     
     for contact in contacts:
         if contact['status'] != 'Sent':
-    try:
-        # Create email
-        msg = EmailMessage()
-        msg['From'] = EMAIL
+            try:
+                # Create email
+                msg = EmailMessage()
+                msg['From'] = EMAIL
                 msg['To'] = contact['email']
-        msg['Subject'] = subject
+                msg['Subject'] = subject
                 
                 email_content = f"""Dear {contact['first_name']},
 
@@ -400,42 +400,47 @@ Best regards,
 Your Team"""
                 
                 msg.set_content(email_content)
-        
-        # Send email with bounce detection
-        try:
-        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
-            server.starttls()
-            server.login(EMAIL, PASSWORD)
-            server.send_message(msg)
-        except smtplib.SMTPRecipientsRefused as e:
-            error_msg = str(e)
-            print(f"❌ Recipients refused for {contact['email']}: {error_msg}")
-            detect_bounce_from_smtp_error(contact['email'], f"Recipients refused: {error_msg}")
-            continue
-        except smtplib.SMTPResponseException as e:
-            error_msg = f"SMTP {e.smtp_code}: {e.smtp_error.decode() if hasattr(e.smtp_error, 'decode') else str(e.smtp_error)}"
-            print(f"❌ SMTP error for {contact['email']}: {error_msg}")
-            detect_bounce_from_smtp_error(contact['email'], error_msg)
-            continue
-        except Exception as e:
-            error_msg = str(e)
-            print(f"❌ Failed to send email to {contact['email']}: {error_msg}")
-            if any(keyword in error_msg.lower() for keyword in ['user unknown', 'mailbox', 'recipient', 'invalid', 'refused']):
-                detect_bounce_from_smtp_error(contact['email'], error_msg)
-            continue
-        
-                # Mark as sent
-                contact['status'] = 'Sent'
-                contact['sent_date'] = datetime.now().isoformat()
                 
-                # Track email
-                track_email_sent(contact['email'], subject, "Campaign")
-                
-                sent_count += 1
-        
-    except Exception as e:
+                # Send email with bounce detection
+                try:
+                    with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+                        server.starttls()
+                        server.login(EMAIL, PASSWORD)
+                        server.send_message(msg)
+                        
+                    # Mark as sent
+                    contact['status'] = 'Sent'
+                    contact['sent_date'] = datetime.now().isoformat()
+                    
+                    # Track email
+                    track_email_sent(contact['email'], subject, "Campaign")
+                    
+                    sent_count += 1
+                    
+                except smtplib.SMTPRecipientsRefused as e:
+                    error_msg = str(e)
+                    print(f"❌ Recipients refused for {contact['email']}: {error_msg}")
+                    detect_bounce_from_smtp_error(contact['email'], f"Recipients refused: {error_msg}")
+                    failed_count += 1
+                    continue
+                except smtplib.SMTPResponseException as e:
+                    error_msg = f"SMTP {e.smtp_code}: {e.smtp_error.decode() if hasattr(e.smtp_error, 'decode') else str(e.smtp_error)}"
+                    print(f"❌ SMTP error for {contact['email']}: {error_msg}")
+                    detect_bounce_from_smtp_error(contact['email'], error_msg)
+                    failed_count += 1
+                    continue
+                except Exception as e:
+                    error_msg = str(e)
+                    print(f"❌ Failed to send email to {contact['email']}: {error_msg}")
+                    if any(keyword in error_msg.lower() for keyword in ['user unknown', 'mailbox', 'recipient', 'invalid', 'refused']):
+                        detect_bounce_from_smtp_error(contact['email'], error_msg)
+                    failed_count += 1
+                    continue
+                    
+            except Exception as e:
                 contact['status'] = 'Failed'
                 failed_count += 1
+                print(f"❌ Unexpected error for {contact['email']}: {e}")
     
     return jsonify({
         'success': True, 
