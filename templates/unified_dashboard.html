@@ -2024,22 +2024,31 @@ Your Team</textarea>
             }
             
             // Update activity feed with safe data
-            updateActivityFeed(data.activity_feed || []);
+            try {
+                updateActivityFeed(data.activity_feed || []);
+            } catch (error) {
+                console.error('Error updating activity feed:', error);
+                const feed = document.getElementById('activity-feed');
+                if (feed) {
+                    feed.innerHTML = '<div class="text-muted">No recent activity</div>';
+                }
+            }
         }
 
         function updateActivityFeed(activities) {
-            const feed = document.getElementById('activity-feed');
-            if (!feed) return;
-            
-            // Safety check for activities
-            if (!activities || !Array.isArray(activities)) {
-                feed.innerHTML = '<div class="text-muted">No recent activity</div>';
-                return;
-            }
-            
-            let html = '';
-            
-            activities.forEach(activity => {
+            try {
+                const feed = document.getElementById('activity-feed');
+                if (!feed) return;
+                
+                // Safety check for activities
+                if (!activities || !Array.isArray(activities)) {
+                    feed.innerHTML = '<div class="text-muted">No recent activity</div>';
+                    return;
+                }
+                
+                let html = '';
+                
+                activities.forEach(activity => {
                 const colorClass = activity.color === 'success' ? 'bg-success' : 
                                  activity.color === 'info' ? 'bg-info' : 
                                  activity.color === 'warning' ? 'bg-warning' : 'bg-primary';
@@ -2058,6 +2067,13 @@ Your Team</textarea>
             });
             
             feed.innerHTML = html;
+            } catch (error) {
+                console.error('Error in updateActivityFeed:', error);
+                const feed = document.getElementById('activity-feed');
+                if (feed) {
+                    feed.innerHTML = '<div class="text-muted">No recent activity</div>';
+                }
+            }
         }
 
         async function refreshAnalytics() {
