@@ -2,17 +2,22 @@
   "version": 2,
   "builds": [
     {
-      "src": "wsgi.py",
+      "src": "index.py",
       "use": "@vercel/python"
     }
   ],
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "wsgi.py"
+      "dest": "index.py"
     }
   ],
   "env": {
     "FLASK_ENV": "production"
+  },
+  "functions": {
+    "index.py": {
+      "maxDuration": 30
+    }
   }
 }
