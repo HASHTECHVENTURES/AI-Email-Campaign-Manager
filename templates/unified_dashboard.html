@@ -582,6 +582,7 @@ Your Team</textarea>
                     fileInput.value = ''; // Clear file input
                     await loadContacts();
                     await loadCampaignStatus();
+                    updateStats(); // Force update stats after upload
                 } else {
                     showAlert(`❌ ${result.message}`, 'danger');
                 }
@@ -616,6 +617,7 @@ Your Team</textarea>
                     console.log('🔧 RELOADING CONTACTS AFTER ADD...');
                     await loadContacts();
                     await loadCampaignStatus();
+                    updateStats(); // Force update stats after adding contact
                     console.log('🔧 RELOAD COMPLETE');
                 } else {
                     console.log('❌ CONTACT ADD FAILED:', result.message);
@@ -751,7 +753,7 @@ Your Team</textarea>
                 </div>
             `;
             
-            alertContainer.insertAdjacentHTML('beforeend', alertHtml);
+            alertContainer.insertAdjacentHTML('afterbegin', alertHtml);
             
             // Auto-dismiss after 5 seconds
             setTimeout(() => {
