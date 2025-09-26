@@ -261,6 +261,12 @@ def get_contacts():
     print(f"📋 GET CONTACTS: {len(contacts)} contacts")
     return jsonify(contacts)
 
+@app.route('/api/contacts')
+def get_contacts_api():
+    """Get all contacts - API endpoint"""
+    print(f"📋 GET CONTACTS API: {len(contacts)} contacts")
+    return jsonify(contacts)
+
 @app.route('/add-contact', methods=['POST'])
 def add_contact():
     """Add a single contact"""
@@ -289,6 +295,37 @@ def add_contact():
     
     contacts.append(new_contact)
     print(f"✅ CONTACT ADDED: Total contacts now: {len(contacts)}")
+    
+    return jsonify({'success': True, 'message': 'Contact added successfully'})
+
+@app.route('/api/add-contact', methods=['POST'])
+def add_contact_api():
+    """Add a single contact - API endpoint"""
+    global contacts
+    
+    email_addr = request.form.get('email')
+    first_name = request.form.get('first_name')
+    last_name = request.form.get('last_name')
+    
+    print(f"➕ ADDING CONTACT API: {email_addr} - {first_name} {last_name}")
+    
+    if not email_addr or not first_name:
+        return jsonify({'success': False, 'message': 'Email and first name required'})
+    
+    # Check if already exists
+    for contact in contacts:
+        if contact['email'].lower() == email_addr.lower():
+            return jsonify({'success': False, 'message': 'Contact already exists'})
+    
+    new_contact = {
+        'email': email_addr,
+        'first_name': first_name,
+        'last_name': last_name or '',
+        'status': 'Pending'
+    }
+    
+    contacts.append(new_contact)
+    print(f"✅ CONTACT ADDED API: Total contacts now: {len(contacts)}")
     
     return jsonify({'success': True, 'message': 'Contact added successfully'})
 
@@ -500,6 +537,48 @@ def stop_monitoring():
     monitoring_active = False
     print("📧 EMAIL MONITORING STOPPED")
     return jsonify({'success': True, 'message': 'Email monitoring stopped'})
+
+# Additional endpoints that the frontend expects
+@app.route('/remove-contact', methods=['POST'])
+def remove_contact():
+    """Remove a contact"""
+    global contacts
+    
+    data = request.get_json()
+    email = data.get('email')
+    
+    if not email:
+        return jsonify({'success': False, 'message': 'Email address required'})
+    
+    # Find and remove contact
+    original_count = len(contacts)
+    contacts = [c for c in contacts if c['email'].lower() != email.lower()]
+    
+    if len(contacts) < original_count:
+        print(f"🗑️ CONTACT REMOVED: {email}")
+        return jsonify({'success': True, 'message': 'Contact removed successfully'})
+    else:
+        return jsonify({'success': False, 'message': 'Contact not found'})
+
+@app.route('/upload-bulk-contacts', methods=['POST'])
+def upload_bulk_contacts():
+    """Upload bulk contacts from file"""
+    # For now, return a simple response since file upload is complex
+    return jsonify({'success': False, 'message': 'Bulk upload not implemented yet'})
+
+@app.route('/reset-campaign', methods=['POST'])
+def reset_campaign():
+    """Reset campaign status"""
+    global contacts, sent_emails
+    
+    # Reset all contact statuses
+    for contact in contacts:
+        contact['status'] = 'Pending'
+        if 'sent_date' in contact:
+            del contact['sent_date']
+    
+    print("🔄 CAMPAIGN RESET")
+    return jsonify({'success': True, 'message': 'Campaign reset successfully'})
 
 @app.route('/api/analytics/dashboard')
 def get_analytics():

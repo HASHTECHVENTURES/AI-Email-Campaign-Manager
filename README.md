@@ -9,6 +9,20 @@
 
 This is not just another email marketing tool - this is a **COMPLETE AI MARKETING MACHINE** that works 24/7 to grow your business while you sleep!
 
+## ✅ **RECENT FIXES & IMPROVEMENTS**
+
+- **🔧 Fixed 404 API Endpoint Errors**: All missing endpoints have been added and tested
+- **🔄 Frontend-Backend Sync**: Fixed route inconsistencies between frontend and backend
+- **🧹 Clean Project Structure**: Removed duplicate files and unnecessary folders
+- **📡 Added Missing Endpoints**: 
+  - `/get-contacts` and `/api/contacts` for contact retrieval
+  - `/add-contact` and `/api/add-contact` for adding contacts
+  - `/remove-contact` for contact removal
+  - `/reset-campaign` for campaign reset
+  - `/upload-bulk-contacts` for bulk uploads
+- **🚀 Easy Startup**: Added `start_app.py` for simple application startup
+- **🧪 Testing Tools**: Added `test_endpoints.py` for endpoint verification
+
 ### 🎯 **What This System Does (AUTOMATICALLY):**
 
 - 🤖 **AI-Powered Email Responses** - Automatically replies to every email with perfect personality matching
@@ -80,7 +94,9 @@ GEMINI_API_KEY=your-gemini-api-key
 
 5. **Run the application**
 ```bash
-python minimal_app.py
+python start_app.py
+# Or directly:
+python simple_working_app.py
 ```
 
 6. **Open your browser**
@@ -193,9 +209,13 @@ AI-Email-Campaign-Manager/
 
 ### **Campaign Management**
 - `GET /get-contacts` - Get all contacts
+- `GET /api/contacts` - Get all contacts (API version)
 - `POST /add-contact` - Add new contact
+- `POST /api/add-contact` - Add new contact (API version)
+- `POST /remove-contact` - Remove a contact
 - `POST /start-manual-campaign` - Start campaign
 - `POST /reset-campaign` - Reset campaign
+- `POST /upload-bulk-contacts` - Upload contacts from file
 
 ### **AI Agent**
 - `POST /api/ai/generate-reply` - Generate AI reply
