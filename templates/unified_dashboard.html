@@ -788,34 +788,6 @@ Your Team</textarea>
         }
 
 
-        async function manualCheckAndReply() {
-            try {
-                showAlert('📧 Checking for new replies...', 'info');
-                
-                // First check for replies
-                const checkResponse = await fetch('/api/email-monitoring/check-now', {
-                    method: 'POST'
-                });
-                
-                const checkResult = await checkResponse.json();
-                
-                if (checkResult.success && checkResult.replies_count > 0) {
-                    showAlert(`✅ Found ${checkResult.replies_count} replies! Check the Replies tab to respond manually.`, 'success');
-                    
-                    // Give AI time to process and reply
-                    setTimeout(() => {
-                        showAlert('🤖 AI has processed replies and sent responses!', 'success');
-                    }, 3000);
-                    
-                } else {
-                    showAlert('ℹ️ No new replies found to process', 'info');
-                }
-                
-            } catch (error) {
-                console.error('Error in manual AI check:', error);
-                showAlert('❌ Error in AI check and reply', 'danger');
-            }
-        }
 
         async function startEmailMonitoring() {
             try {
