@@ -260,6 +260,34 @@
                     </div>
                 </div>
             </div>
+            
+            <!-- Email Limits Row -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="stats-card bg-info text-white">
+                        <h3 id="daily-remaining">100</h3>
+                        <p class="mb-0">Daily Limit</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stats-card bg-warning text-white">
+                        <h3 id="hourly-remaining">20</h3>
+                        <p class="mb-0">Hourly Limit</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stats-card bg-success text-white">
+                        <h3 id="daily-sent">0</h3>
+                        <p class="mb-0">Sent Today</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stats-card bg-primary text-white">
+                        <h3 id="hourly-sent">0</h3>
+                        <p class="mb-0">Sent This Hour</p>
+                    </div>
+                </div>
+            </div>
 
             <!-- Main Content Tabs -->
             <ul class="nav nav-tabs mb-4" id="mainTabs" role="tablist">
@@ -276,6 +304,11 @@
                 <li class="nav-item" role="presentation">
                     <button class="nav-link" id="validation-tab" data-bs-toggle="tab" data-bs-target="#validation" type="button" role="tab">
                         <i class="fas fa-shield-alt me-2"></i>Email Validation
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="limits-tab" data-bs-toggle="tab" data-bs-target="#limits" type="button" role="tab">
+                        <i class="fas fa-tachometer-alt me-2"></i>Email Limits
                     </button>
                 </li>
             </ul>
@@ -470,9 +503,93 @@ Your Team</textarea>
                     </div>
                 </div>
             </div>
-
-
-
+            
+            <!-- Email Limits Tab -->
+            <div class="tab-pane fade" id="limits" role="tabpanel">
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">
+                                    <i class="fas fa-tachometer-alt me-2"></i>Email Sending Limits
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    <strong>Email Limits:</strong> Configure daily and hourly email sending limits to prevent hitting service provider limits and maintain good sender reputation.
+                                </div>
+                                
+                                <form id="limitsForm">
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <div class="mb-3">
+                                                <label for="dailyLimit" class="form-label">Daily Limit</label>
+                                                <input type="number" class="form-control" id="dailyLimit" min="1" max="1000" value="100">
+                                                <small class="form-text text-muted">Maximum emails per day (1-1000)</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="mb-3">
+                                                <label for="hourlyLimit" class="form-label">Hourly Limit</label>
+                                                <input type="number" class="form-control" id="hourlyLimit" min="1" max="100" value="20">
+                                                <small class="form-text text-muted">Maximum emails per hour (1-100)</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="mb-3">
+                                                <label for="cooldown" class="form-label">Cooldown (seconds)</label>
+                                                <input type="number" class="form-control" id="cooldown" min="0" max="60" value="1">
+                                                <small class="form-text text-muted">Delay between emails (0-60 seconds)</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save me-2"></i>Update Limits
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">
+                                    <i class="fas fa-chart-bar me-2"></i>Current Status
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between">
+                                        <span>Daily Usage:</span>
+                                        <span id="daily-usage">0/100</span>
+                                    </div>
+                                    <div class="progress mt-1">
+                                        <div id="daily-progress" class="progress-bar bg-info" style="width: 0%"></div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between">
+                                        <span>Hourly Usage:</span>
+                                        <span id="hourly-usage">0/20</span>
+                                    </div>
+                                    <div class="progress mt-1">
+                                        <div id="hourly-progress" class="progress-bar bg-warning" style="width: 0%"></div>
+                                    </div>
+                                </div>
+                                
+                                <div class="alert alert-success" id="limits-status">
+                                    <i class="fas fa-check-circle me-2"></i>
+                                    <strong>Status:</strong> <span id="status-text">Ready to send emails</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <!-- Alerts -->
             <div id="alertContainer"></div>
@@ -491,6 +608,7 @@ Your Team</textarea>
             loadContacts();
             loadCampaignStatus();
             loadMonitoringStatus();
+            loadEmailLimits();
             setupEventListeners();
             
             // Auto-start monitoring when page loads
@@ -555,6 +673,12 @@ Your Team</textarea>
             document.getElementById('campaignForm').addEventListener('submit', function(e) {
                 e.preventDefault();
                 startCampaign();
+            });
+            
+            // Limits form
+            document.getElementById('limitsForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                updateEmailLimits();
             });
         }
 
@@ -1406,6 +1530,85 @@ Your Team</textarea>
 
         function hideEmailProgress() {
             document.getElementById('emailProgress').style.display = 'none';
+        }
+
+        // Email Limits Functions
+        async function loadEmailLimits() {
+            try {
+                const response = await fetch('/api/email-limits');
+                const limits = await response.json();
+                
+                // Update dashboard stats
+                document.getElementById('daily-remaining').textContent = limits.daily_remaining;
+                document.getElementById('hourly-remaining').textContent = limits.hourly_remaining;
+                document.getElementById('daily-sent').textContent = limits.daily_sent;
+                document.getElementById('hourly-sent').textContent = limits.hourly_sent;
+                
+                // Update limits tab
+                document.getElementById('dailyLimit').value = limits.daily_limit;
+                document.getElementById('hourlyLimit').value = limits.hourly_limit;
+                document.getElementById('cooldown').value = limits.cooldown_seconds;
+                
+                // Update progress bars
+                const dailyProgress = (limits.daily_sent / limits.daily_limit) * 100;
+                const hourlyProgress = (limits.hourly_sent / limits.hourly_limit) * 100;
+                
+                document.getElementById('daily-progress').style.width = `${dailyProgress}%`;
+                document.getElementById('hourly-progress').style.width = `${hourlyProgress}%`;
+                
+                // Update usage text
+                document.getElementById('daily-usage').textContent = `${limits.daily_sent}/${limits.daily_limit}`;
+                document.getElementById('hourly-usage').textContent = `${limits.hourly_sent}/${limits.hourly_limit}`;
+                
+                // Update status
+                const statusElement = document.getElementById('status-text');
+                const statusAlert = document.getElementById('limits-status');
+                
+                if (limits.can_send_daily && limits.can_send_hourly) {
+                    statusElement.textContent = 'Ready to send emails';
+                    statusAlert.className = 'alert alert-success';
+                } else if (!limits.can_send_daily) {
+                    statusElement.textContent = 'Daily limit reached';
+                    statusAlert.className = 'alert alert-danger';
+                } else if (!limits.can_send_hourly) {
+                    statusElement.textContent = 'Hourly limit reached';
+                    statusAlert.className = 'alert alert-warning';
+                }
+                
+            } catch (error) {
+                console.error('Error loading email limits:', error);
+            }
+        }
+
+        async function updateEmailLimits() {
+            const dailyLimit = document.getElementById('dailyLimit').value;
+            const hourlyLimit = document.getElementById('hourlyLimit').value;
+            const cooldown = document.getElementById('cooldown').value;
+            
+            try {
+                const response = await fetch('/api/update-email-limits', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        daily_limit: parseInt(dailyLimit),
+                        hourly_limit: parseInt(hourlyLimit),
+                        cooldown: parseInt(cooldown)
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showAlert('Email limits updated successfully!', 'success');
+                    await loadEmailLimits();
+                } else {
+                    showAlert(result.message, 'danger');
+                }
+            } catch (error) {
+                showAlert('Error updating email limits', 'danger');
+            }
         }
 
     </script>

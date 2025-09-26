@@ -35,6 +35,11 @@ replies = []
 bounced_emails = []
 fake_emails = []
 
+# Email sending limits
+DAILY_EMAIL_LIMIT = 100  # Maximum emails per day
+HOURLY_EMAIL_LIMIT = 20  # Maximum emails per hour
+EMAIL_SENDING_COOLDOWN = 1  # Seconds between emails
+
 # Analytics
 email_analytics = {
     'total_sent': 0,
@@ -85,6 +90,40 @@ def validate_email_deliverability(email):
         return {'valid': False, 'reason': 'Domain does not exist'}
     
     return {'valid': True, 'reason': 'Valid email'}
+
+def get_email_limits_status():
+    """Get current email sending limits status"""
+    from datetime import datetime, timedelta
+    
+    now = datetime.now()
+    today = now.date()
+    current_hour = now.hour
+    
+    # Count emails sent today
+    today_emails = [email for email in sent_emails 
+                   if datetime.fromisoformat(email['timestamp']).date() == today]
+    
+    # Count emails sent in current hour
+    hour_start = now.replace(minute=0, second=0, microsecond=0)
+    hour_emails = [email for email in sent_emails 
+                  if datetime.fromisoformat(email['timestamp']) >= hour_start]
+    
+    return {
+        'daily_limit': DAILY_EMAIL_LIMIT,
+        'hourly_limit': HOURLY_EMAIL_LIMIT,
+        'daily_sent': len(today_emails),
+        'hourly_sent': len(hour_emails),
+        'daily_remaining': max(0, DAILY_EMAIL_LIMIT - len(today_emails)),
+        'hourly_remaining': max(0, HOURLY_EMAIL_LIMIT - len(hour_emails)),
+        'can_send_daily': len(today_emails) < DAILY_EMAIL_LIMIT,
+        'can_send_hourly': len(hour_emails) < HOURLY_EMAIL_LIMIT,
+        'cooldown_seconds': EMAIL_SENDING_COOLDOWN
+    }
+
+def can_send_email():
+    """Check if email sending is allowed based on limits"""
+    status = get_email_limits_status()
+    return status['can_send_daily'] and status['can_send_hourly']
 
 def track_email_sent(recipient, subject, campaign_type="Manual"):
     """Track sent emails"""
@@ -605,6 +644,36 @@ def reset_all_data():
     return jsonify({
         'success': True,
         'message': 'All data reset successfully'
+    })
+
+@app.route('/api/email-limits')
+def get_email_limits():
+    """Get email sending limits status"""
+    status = get_email_limits_status()
+    return jsonify(status)
+
+@app.route('/api/update-email-limits', methods=['POST'])
+def update_email_limits():
+    """Update email sending limits"""
+    global DAILY_EMAIL_LIMIT, HOURLY_EMAIL_LIMIT, EMAIL_SENDING_COOLDOWN
+    
+    data = request.get_json()
+    
+    if 'daily_limit' in data:
+        DAILY_EMAIL_LIMIT = max(1, min(1000, data['daily_limit']))
+    if 'hourly_limit' in data:
+        HOURLY_EMAIL_LIMIT = max(1, min(100, data['hourly_limit']))
+    if 'cooldown' in data:
+        EMAIL_SENDING_COOLDOWN = max(0, min(60, data['cooldown']))
+    
+    return jsonify({
+        'success': True,
+        'message': 'Email limits updated successfully',
+        'limits': {
+            'daily_limit': DAILY_EMAIL_LIMIT,
+            'hourly_limit': HOURLY_EMAIL_LIMIT,
+            'cooldown_seconds': EMAIL_SENDING_COOLDOWN
+        }
     })
 
 if __name__ == '__main__':
