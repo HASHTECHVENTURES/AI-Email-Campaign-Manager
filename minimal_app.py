@@ -1331,18 +1331,18 @@ def get_analytics_dashboard():
             neutral_pct = round(neutral_count / total_sentiment * 100)
             negative_pct = round(negative_count / total_sentiment * 100)
         else:
-            positive_pct, neutral_pct, negative_pct = 67, 23, 10  # Default values
+            positive_pct, neutral_pct, negative_pct = 0, 0, 0  # No data yet
         
         analytics_data = {
             'kpis': {
                 'total_campaigns': total_campaigns,
                 'total_responses': total_responses,
                 'ai_efficiency': ai_efficiency,
-                'conversion_rate': 23,  # Calculated based on positive responses
-                'campaigns_growth': '+12%',
-                'responses_growth': '+34%',
-                'ai_improvement': '+15%',
-                'conversion_trend': '+8%'
+                'conversion_rate': 0,  # Will be calculated based on actual data
+                'campaigns_growth': '+0%',
+                'responses_growth': '+0%',
+                'ai_improvement': '+0%',
+                'conversion_trend': '+0%'
             },
             'ai_performance': {
                 'successful_replies': ai_replies,
