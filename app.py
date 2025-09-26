@@ -10,6 +10,8 @@ from email.message import EmailMessage
 from datetime import datetime
 import requests
 import json
+import pandas as pd
+import io
 
 app = Flask(__name__)
 
@@ -312,8 +314,83 @@ def remove_contact():
 
 @app.route('/upload-bulk-contacts', methods=['POST'])
 def upload_bulk_contacts():
-    """Upload bulk contacts from file"""
-    return jsonify({'success': False, 'message': 'Bulk upload not implemented yet'})
+    """Upload bulk contacts from Excel/CSV file"""
+    global contacts
+    
+    if 'file' not in request.files:
+        return jsonify({'success': False, 'message': 'No file uploaded'})
+    
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({'success': False, 'message': 'No file selected'})
+    
+    try:
+        # Read the file based on extension
+        if file.filename.endswith('.csv'):
+            # Read CSV file
+            df = pd.read_csv(io.StringIO(file.read().decode('utf-8')))
+        elif file.filename.endswith(('.xlsx', '.xls')):
+            # Read Excel file
+            df = pd.read_excel(io.BytesIO(file.read()))
+        else:
+            return jsonify({'success': False, 'message': 'Unsupported file format. Please upload CSV or Excel file.'})
+        
+        # Check required columns
+        required_columns = ['Email', 'First Name', 'Last Name']
+        if not all(col in df.columns for col in required_columns):
+            return jsonify({
+                'success': False, 
+                'message': f'Missing required columns. Please include: {", ".join(required_columns)}'
+            })
+        
+        # Process contacts
+        added_count = 0
+        duplicate_count = 0
+        error_count = 0
+        
+        for index, row in df.iterrows():
+            try:
+                email = str(row['Email']).strip()
+                first_name = str(row['First Name']).strip()
+                last_name = str(row['Last Name']).strip()
+                
+                # Validate email
+                if not email or '@' not in email:
+                    error_count += 1
+                    continue
+                
+                # Check for duplicates
+                is_duplicate = any(contact['email'].lower() == email.lower() for contact in contacts)
+                if is_duplicate:
+                    duplicate_count += 1
+                    continue
+                
+                # Add new contact
+                new_contact = {
+                    'email': email,
+                    'first_name': first_name,
+                    'last_name': last_name,
+                    'status': 'Pending'
+                }
+                
+                contacts.append(new_contact)
+                added_count += 1
+                
+            except Exception as e:
+                error_count += 1
+                print(f"Error processing row {index}: {str(e)}")
+                continue
+        
+        return jsonify({
+            'success': True,
+            'message': f'Bulk upload completed! Added: {added_count}, Duplicates: {duplicate_count}, Errors: {error_count}',
+            'added_count': added_count,
+            'duplicate_count': duplicate_count,
+            'error_count': error_count
+        })
+        
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Error processing file: {str(e)}'})
 
 @app.route('/reset-campaign', methods=['POST'])
 def reset_campaign():
