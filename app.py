@@ -67,6 +67,10 @@ def generate_ai_reply(original_message, sender_name=""):
 
 @app.route('/')
 def index():
+    return render_template('unified_dashboard.html')
+
+@app.route('/test')
+def test_page():
     return send_file('test.html')
 
 @app.route('/api/health')
