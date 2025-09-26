@@ -364,50 +364,27 @@ Your Team</textarea>
                                         <i class="fas fa-inbox me-2"></i>Email Replies
                         </h4>
                                 <div>
-                                        <span class="badge bg-success me-2">
-                                            <i class="fas fa-check me-1"></i>Auto-Monitoring Active
-                                        </span>
-                                        <span class="badge bg-info me-2">
-                                            <i class="fas fa-user me-1"></i>Manual Reply Mode
-                                        </span>
-                                        <span class="badge bg-success me-2" id="live-status">
-                                            <i class="fas fa-circle me-1 blink"></i>LIVE MONITORING
-                                        </span>
                                         <button class="btn btn-info btn-sm" onclick="checkForReplies()">
-                                            <i class="fas fa-sync me-1"></i>Refresh Now
-                                    </button>
-                                        <button class="btn btn-success btn-sm ms-2" onclick="manualCheckAndReply()">
-                                            <i class="fas fa-reply me-1"></i>Check & Reply
+                                            <i class="fas fa-sync me-1"></i>Check for Replies
                                     </button>
                                 </div>
                             </div>
                                 <div id="repliesList">
                                     <div class="text-center text-muted py-4">
                                         <i class="fas fa-inbox fa-3x mb-3"></i>
-                                        <p><strong>AI Email Monitoring Active</strong></p>
-                                        <p>Replies will appear here automatically when contacts respond to your campaigns. The AI agent will analyze and respond intelligently to each email.</p>
+                                        <p><strong>No replies yet</strong></p>
+                                        <p>Click "Check for Replies" to see emails from users who have responded to your campaigns.</p>
                                     </div>
                                 </div>
                     </div>
                         </div>
 
-                        <!-- Reply Actions -->
+                        <!-- Manual Reply Actions -->
                 <div class="col-md-4">
                     <div class="section-card">
                                 <h4 class="fw-bold mb-3">
-                                    <i class="fas fa-cog me-2"></i>Reply Settings
+                                    <i class="fas fa-reply me-2"></i>Manual Reply
                         </h4>
-                        <div class="mb-3">
-                                    <label class="form-label">Auto-Monitoring Status</label>
-                                    <div class="d-flex align-items-center">
-                                        <span class="badge bg-success" id="monitoring-status">Always Active</span>
-                                        <small class="text-muted ms-2">No setup needed</small>
-                                </div>
-                            </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Last Check</label>
-                                    <small class="text-muted" id="last-check">Never</small>
-                        </div>
                                 <div class="mb-3">
                                     <label class="form-label">Reply Style</label>
                                     <select class="form-select" id="replyStyle" onchange="updateReplyStyle()">
@@ -416,30 +393,7 @@ Your Team</textarea>
                                         <option value="consultative">🎯 Consultative</option>
                                         <option value="enthusiastic">🚀 Enthusiastic</option>
                                     </select>
-                                    <small class="text-muted">Choose your preferred reply style for manual responses</small>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Reply Performance</label>
-                                    <div class="row text-center">
-                                        <div class="col-4">
-                                            <div class="bg-success bg-opacity-10 p-2 rounded">
-                                                <div class="fw-bold text-success" id="manual-reply-rate">0%</div>
-                                                <small class="text-muted">Reply Rate</small>
-                                            </div>
-                                        </div>
-                                        <div class="col-4">
-                                            <div class="bg-info bg-opacity-10 p-2 rounded">
-                                                <div class="fw-bold text-info" id="ai-response-time">1.2s</div>
-                                                <small class="text-muted">Avg Response</small>
-                                            </div>
-                                        </div>
-                                        <div class="col-4">
-                                            <div class="bg-warning bg-opacity-10 p-2 rounded">
-                                                <div class="fw-bold text-warning" id="manual-replies">0</div>
-                                                <small class="text-muted">Manual Replies</small>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    <small class="text-muted">Choose your preferred reply style</small>
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label">Quick Actions</label>
@@ -447,11 +401,8 @@ Your Team</textarea>
                                         <button class="btn btn-outline-primary btn-sm" onclick="markAllAsRead()">
                                             <i class="fas fa-check me-1"></i>Mark All as Read
                                         </button>
-                                        <button class="btn btn-outline-success btn-sm me-2" onclick="retryFailedAI()">
-                                            <i class="fas fa-redo me-1"></i>Retry AI Failures
-                                        </button>
-                                        <button class="btn btn-outline-warning btn-sm me-2" onclick="removeDuplicateReplies()">
-                                            <i class="fas fa-copy me-1"></i>Remove Duplicates
+                                        <button class="btn btn-outline-warning btn-sm" onclick="removeDuplicateReplies()">
+                                            <i class="fas fa-trash me-1"></i>Remove Duplicates
                                         </button>
                                     </div>
                                 </div>
@@ -1216,7 +1167,8 @@ Your Team</textarea>
                 container.innerHTML = `
                     <div class="text-center text-muted py-4">
                         <i class="fas fa-inbox fa-3x mb-3"></i>
-                        <p>No replies received yet. Check for replies or start auto-monitoring.</p>
+                        <p><strong>No replies yet</strong></p>
+                        <p>Click "Check for Replies" to see emails from users who have responded to your campaigns.</p>
                     </div>
                 `;
                 return;
@@ -1224,37 +1176,34 @@ Your Team</textarea>
             
             let html = '';
             replies.forEach((reply, index) => {
-                const statusClass = reply.status === 'New' ? 'status-pending' : 
-                                  reply.status === 'Replied' ? 'status-sent' : 'status-failed';
+                const replyDate = new Date(reply.timestamp || reply.received_date).toLocaleString();
+                const replyContent = reply.content || reply.message || 'No content available';
                 
                 html += `
-                    <div class="contact-item">
-                        <div class="row align-items-center">
-                            <div class="col-md-8">
-                                <div class="d-flex align-items-center mb-2">
-                                    <h6 class="mb-0 me-3">${reply.from_name || reply.from_email}</h6>
-                                    <span class="status-badge ${statusClass}">${reply.status}</span>
-                                    <small class="text-muted ms-2">${new Date(reply.received_date).toLocaleString()}</small>
-                        </div>
-                                <h6 class="text-primary mb-1">${reply.subject}</h6>
-                                <p class="text-muted mb-0 small">${reply.message.substring(0, 100)}${reply.message.length > 100 ? '...' : ''}</p>
+                    <div class="card mb-3">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-0">
+                                    <i class="fas fa-user me-2"></i>${reply.from_name || reply.from_email}
+                                </h6>
+                                <small class="text-muted">${reply.subject}</small>
                             </div>
-                            <div class="col-md-4 text-end">
-                                <button class="btn btn-sm btn-outline-primary me-1" onclick="viewReply(${reply.id})">
-                                    <i class="fas fa-eye"></i>
-                            </button>
-                                ${reply.ai_auto_replied ? 
-                                    '<span class="badge bg-success me-1"><i class="fas fa-robot me-1"></i>AI Replied</span>' : 
-                                    reply.ai_error ? 
-                                        '<span class="badge bg-warning me-1"><i class="fas fa-exclamation-triangle me-1"></i>AI Error</span>' :
-                                        '<span class="badge bg-info me-1"><i class="fas fa-clock me-1"></i>Processing...</span>'
-                                }
+                            <div>
+                                <small class="text-muted">${replyDate}</small>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <p class="mb-3">${replyContent}</p>
+                            <div class="d-flex justify-content-end">
+                                <button class="btn btn-sm btn-primary me-2" onclick="replyToEmail(${reply.id})">
+                                    <i class="fas fa-reply me-1"></i>Reply
+                                </button>
                                 <button class="btn btn-sm btn-outline-danger" onclick="deleteReply(${reply.id})">
                                     <i class="fas fa-trash"></i>
                                 </button>
+                            </div>
                         </div>
                     </div>
-                </div>
                 `;
             });
             
@@ -1262,8 +1211,17 @@ Your Team</textarea>
         }
 
         function updateRepliesCount() {
-            const newReplies = replies.filter(r => r.status === 'New').length;
-            document.getElementById('replies-count').textContent = newReplies;
+            document.getElementById('replies-count').textContent = replies.length;
+        }
+
+        function replyToEmail(replyId) {
+            const reply = replies.find(r => r.id === replyId);
+            if (!reply) return;
+            
+            const replyText = prompt(`Reply to ${reply.from_name || reply.from_email}:\n\nEnter your reply message:`);
+            if (replyText && replyText.trim()) {
+                sendManualReply(replyId, replyText.trim());
+            }
         }
 
         function updateMonitoringDisplay(status) {
