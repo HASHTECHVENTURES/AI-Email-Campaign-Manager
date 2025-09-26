@@ -776,14 +776,18 @@ Your Team</textarea>
             const statusElement = document.getElementById('monitoring-status');
             const lastCheckElement = document.getElementById('last-check');
             
-            // Always show as active since monitoring starts automatically
-            statusElement.textContent = 'Always Active';
-            statusElement.className = 'badge bg-success';
+            // Check if elements exist before trying to update them
+            if (statusElement) {
+                statusElement.textContent = 'Always Active';
+                statusElement.className = 'badge bg-success';
+            }
             
-            if (status.last_check) {
-                lastCheckElement.textContent = new Date(status.last_check).toLocaleString();
-            } else {
-                lastCheckElement.textContent = 'Auto-checking every 30 seconds';
+            if (lastCheckElement) {
+                if (status.last_check) {
+                    lastCheckElement.textContent = new Date(status.last_check).toLocaleString();
+                } else {
+                    lastCheckElement.textContent = 'Auto-checking every 30 seconds';
+                }
             }
         }
 
