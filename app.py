@@ -26,6 +26,10 @@ app = Flask(__name__)
 # Email Configuration (Production Ready)
 EMAIL = os.getenv('EMAIL', 'karmaterra427@gmail.com')
 PASSWORD = os.getenv('PASSWORD', 'jidw kfwg hpsh diqi')
+
+# Separate email for monitoring replies (to avoid loops)
+MONITOR_EMAIL = os.getenv('MONITOR_EMAIL', 'karmaterra427+replies@gmail.com')
+MONITOR_PASSWORD = os.getenv('MONITOR_PASSWORD', 'jidw kfwg hpsh diqi')
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 587
 
@@ -193,9 +197,9 @@ def check_for_new_emails():
     try:
         print("📧 Checking for new email replies...")
         
-        # Connect to IMAP server
+        # Connect to IMAP server using separate monitoring email
         mail = imaplib.IMAP4_SSL(IMAP_SERVER)
-        mail.login(EMAIL, PASSWORD)
+        mail.login(MONITOR_EMAIL, MONITOR_PASSWORD)
         mail.select('INBOX')
         
         # Search for emails since last check (or last 24 hours if first time)
@@ -232,8 +236,8 @@ def check_for_new_emails():
                     if '<' in sender_email and '>' in sender_email:
                         sender_email = sender_email.split('<')[1].split('>')[0]
                     
-                    # Skip emails from our own address
-                    if sender_email.lower() == EMAIL.lower():
+                    # Skip emails from our own addresses (both sending and monitoring)
+                    if sender_email.lower() == EMAIL.lower() or sender_email.lower() == MONITOR_EMAIL.lower():
                         continue
                     
                     # Check if this is a reply to one of our sent emails
