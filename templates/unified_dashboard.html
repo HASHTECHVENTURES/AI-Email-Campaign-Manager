@@ -578,7 +578,7 @@ Your Team</textarea>
                 const result = await response.json();
                 
                 if (result.success) {
-                    showAlert(`✅ Successfully uploaded ${result.count} contacts!`, 'success');
+                    showAlert(`✅ ${result.message}`, 'success');
                     fileInput.value = ''; // Clear file input
                     await loadContacts();
                     await loadCampaignStatus();
