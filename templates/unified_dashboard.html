@@ -661,7 +661,7 @@ Your Team</textarea>
                                         <h5>Loading Email Accounts...</h5>
                                         <p>Please wait while we load your email account configurations.</p>
                                     </div>
-                                </div>
+                </div>
             </div>
                         </div>
                     </div>
@@ -747,8 +747,10 @@ Your Team</textarea>
                                     <div class="col-md-6">
                                         <label class="form-label">Email Check Interval</label>
                                         <select class="form-select" id="check-interval">
+                                            <option value="60000">1 minute</option>
+                                            <option value="120000" selected>2 minutes</option>
                                             <option value="300000">5 minutes</option>
-                                            <option value="600000" selected>10 minutes</option>
+                                            <option value="600000">10 minutes</option>
                                             <option value="900000">15 minutes</option>
                                             <option value="1800000">30 minutes</option>
                                         </select>
@@ -844,7 +846,7 @@ Your Team</textarea>
         }
         
         function startEmailCheckInterval() {
-            const interval = document.getElementById('check-interval')?.value || 600000; // Default 10 minutes
+            const interval = document.getElementById('check-interval')?.value || 120000; // Default 2 minutes
             const aiAutoReply = document.getElementById('ai-auto-reply')?.checked || true;
             
             if (emailCheckInterval) {
