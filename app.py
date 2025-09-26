@@ -240,7 +240,7 @@ def check_for_new_emails():
                             if sent_email['recipient'].lower() == sender_email.lower():
                                 original_email = sent_email
                                 is_reply = True
-                                break
+                break
         
                     if is_reply and original_email:
                         # Extract message content
@@ -249,7 +249,7 @@ def check_for_new_emails():
                             for part in email_message.walk():
                                 if part.get_content_type() == "text/plain":
                                     message_content = part.get_payload(decode=True).decode('utf-8', errors='ignore')
-                    break
+                                    break
                         else:
                             message_content = email_message.get_payload(decode=True).decode('utf-8', errors='ignore')
                         
