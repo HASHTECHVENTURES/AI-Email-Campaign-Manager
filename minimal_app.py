@@ -36,8 +36,8 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 # Gmail Configuration - Support for Multiple Email Accounts
 EMAIL_ACCOUNTS = {
     'primary': {
-        'email': os.getenv('EMAIL', 'test@example.com'),
-        'password': os.getenv('PASSWORD', 'test_password'),
+        'email': os.getenv('EMAIL', 'karmaterra427@gmail.com'),
+        'password': os.getenv('PASSWORD', 'jidw kfwg hpsh diqi'),
         'name': 'Primary Account',
         'active': True,
         'smtp_server': 'smtp.gmail.com',
@@ -78,6 +78,8 @@ SMTP_PORT = EMAIL_ACCOUNTS[DEFAULT_EMAIL_ACCOUNT]['smtp_port']
 
 # Ensure primary account is active
 EMAIL_ACCOUNTS['primary']['active'] = True
+
+# Email configuration is now ready for Vercel deployment
 
 # Gemini AI Configuration
 GEMINI_API_KEY = "AIzaSyASwOL-TOo-FNBydsFTN_mWnN1zx7FJkX8"
@@ -237,6 +239,8 @@ Your Team
         email_account = DEFAULT_EMAIL_ACCOUNT
     
     account = EMAIL_ACCOUNTS[email_account]
+    
+    # Using configured email account
     
     # Check if account is configured
     if not account['email'] or account['email'] == 'test@example.com':
